@@ -6,6 +6,7 @@ import java.io.File
 class PdfReader(val files: Array<File>) {
     fun startProcessing() {
         val parser = PdfParser()
+        val CsvWriter = CsvWriter("outfile.csv")
         val context = CommonPool
         val jerbs: MutableList<Deferred<Map<String, String>>> = ArrayList()
         files.forEach({ file ->
@@ -17,6 +18,7 @@ class PdfReader(val files: Array<File>) {
             runBlocking {
                 // TODO: write output from here
                 val output = jerb.await()
+                CsvWriter.insertRow(output)
             }
         })
     }
