@@ -1,6 +1,7 @@
 package com.djvk.sarPdfParser
 
 import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 import java.io.File
 
 class PdfParser {
@@ -11,6 +12,11 @@ class PdfParser {
 
     suspend fun processFile(file: File): Map<String, String> {
         val document: PDDocument = PDDocument.load(file)
+
+        // do stuff
+        var pdfStripper = PDFTextStripper()
+        var pdfContents = pdfStripper.getText(document)
+        println(pdfContents)
 
         return HashMap()
     }
