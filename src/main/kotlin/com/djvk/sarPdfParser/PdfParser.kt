@@ -42,11 +42,11 @@ class PdfParser {
 
     fun getEFCNumber(pdfContent: String): String {
         val regexForEFCWithLabel = """EFC:\s*\d+""".toRegex()
-        var EFCNUmberWithLabel = regexForEFCWithLabel.find(pdfContent, 0)!!.value
+        var EFCNUmberWithLabel = regexForEFCWithLabel.find(pdfContent, 0)?.value ?: ""
 
 
         val regexForEFCNumber = """\d+""".toRegex()
-        val EFCNUmber = regexForEFCNumber.find(EFCNUmberWithLabel, 0)!!.value
+        val EFCNUmber = regexForEFCNumber.find(EFCNUmberWithLabel, 0)?.value ?: ""
 
         return EFCNUmber
     }
