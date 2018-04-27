@@ -12,13 +12,25 @@ import java.io.BufferedWriter
 import kotlin.collections.ArrayList
 
 
-public class CsvWriter(outFile: String) {
+public class CsvWriter(outFile: String, docType: CsvHeaders.DocType) {
 
     val csvPrinter: CSVPrinter
 
     init {
         val writer = Files.newBufferedWriter(Paths.get(outFile))
-        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( * CsvHeaders.DOC_SAR ) )
+        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( *getHeaders(docType)))
+    }
+
+    fun getHeaders(docType: CsvHeaders.DocType): Array<String>{
+        when (docType) {
+            CsvHeaders.DocType.DOCTYPE_SAR -> {
+                return CsvHeaders.DOC_SAR
+            }
+            CsvHeaders.DocType.DOCTYPE_ERROR -> {
+                return  CsvHeaders.DOC_ERRORS
+            }
+        }
+        return CsvHeaders.DOC_SAR
     }
 
     fun insertRow(row: Map<String,String>){

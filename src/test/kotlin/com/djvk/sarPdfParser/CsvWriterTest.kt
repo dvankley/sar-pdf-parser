@@ -16,7 +16,9 @@ class CsvWriterTest {
     @Test
     fun base() {
 
-        val subject: CsvWriter = CsvWriter("csvwritertest.csv")
+        val testFilename = "csvwritertest.csv"
+
+        val subject: CsvWriter = CsvWriter(testFilename, CsvHeaders.DocType.DOCTYPE_SAR)
 
         val expectedHeader = "EFC Number,Student First Name,Student Middle Name,Student Last Name,Student Date of Birth,Social Security Number Last 4 Digits,Parent 1 Educational Level,Parent 2 Educational Level,Student's  2015  Adjusted Gross  Income,Parents'  2015  Adjusted Gross  Income,Child Support Paid,Does student have children they support?,Does student have other non-child/non-spouse dependents?,Parents deceased / student ward of court / in foster care,Emancipated minor?,In legal guardianship?,Unaccompanied homeless youth,Parents received SNAP,Parents received TANF,Student received SNAP,Student received TANF";
         val expectedRow = "EFC number,first name,middle name,last name,std dob,123-12-1234,parent ed 1,parent ed 2,,,child support,yes,2,no,yes,no,yes,1,2,3,4"
@@ -49,13 +51,13 @@ class CsvWriterTest {
 
         subject.finish()
 
-        val br = BufferedReader(FileReader("csvwritertest.csv"))
+        val br = BufferedReader(FileReader(testFilename))
 
         assertEquals(expectedHeader,br.readLine());
         assertEquals(expectedRow,br.readLine())
         assertEquals(expectedRow,br.readLine())
         assertEquals(expectedRow,br.readLine())
 
-        File("csvwritertest.csv").delete()
+        File(testFilename).delete()
     }
 }

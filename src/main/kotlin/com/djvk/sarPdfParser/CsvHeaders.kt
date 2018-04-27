@@ -25,6 +25,13 @@ object CsvHeaders {
     public val H_DSAR_STUDENT_RECEIVED_SNAP = "Student received SNAP"
     public val H_DSAR_STUDENT_RECEIVED_TANF = "Student received TANF"
 
+    public val H_ERRORS_ERROR = "error"
+    public val H_ERRORS_FILENAME = "filename"
+
+    enum class DocType {
+        DOCTYPE_SAR, DOCTYPE_ERROR
+    }
+
     val DOC_SAR = arrayOf(
             H_DSAR_EFC_NUMBER,
             H_DSAR_STUDENT_FIRST_NAME,
@@ -47,5 +54,10 @@ object CsvHeaders {
             H_DSAR_PARENTS_RECEIVED_TANF,
             H_DSAR_STUDENT_RECEIVED_SNAP,
             H_DSAR_STUDENT_RECEIVED_TANF
+    )
+
+    val DOC_ERRORS = arrayOf(
+            H_ERRORS_ERROR,
+            H_ERRORS_FILENAME
     )
 }
