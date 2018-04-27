@@ -53,6 +53,8 @@ class PdfParser {
     }
 
     fun mapToCSVMap(m: HashMap<String, String>): HashMap<String, String> {
+
+
         val csvMap = HashMap<String, String>()
         csvMap.put(CsvHeaders.H_DSAR_EFC_NUMBER, m.getOrDefault("EFC Number", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_FIRST_NAME, m.getOrDefault("Student’s  First  Name", ""))
@@ -62,8 +64,6 @@ class PdfParser {
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_SSN_L4, m.getOrDefault("Student's  Social  Security  Number", ""))
         csvMap.put(CsvHeaders.H_DSAR_PARENT_1_ED_LEVEL, m.getOrDefault("Parent  1  Educational  Level", ""))
         csvMap.put(CsvHeaders.H_DSAR_PARENT_2_ED_LEVEL, m.getOrDefault("Parent  2  Educational  Level", ""))
-        csvMap.put(CsvHeaders.H_DSAR_STUDENT_GROSS_INCOME, m.getOrDefault("Student's  2015  Adjusted Gross  Income", ""))
-        csvMap.put(CsvHeaders.H_DSAR_PARENT_GROSS_INCOME, m.getOrDefault("Parents'  2015  Adjusted Gross  Income", ""))
         csvMap.put(CsvHeaders.H_DSAR_CHILD_SUPPORT_PAID, m.getOrDefault("Student's  Child  Support Paid", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_HAS_CHILDREN, m.getOrDefault("Does Student Have  Children He/She Supports", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_HAS_DEPENDENTS, m.getOrDefault("Does Student Have  Dependents  Other than  Children/Spouse", ""))
@@ -75,6 +75,23 @@ class PdfParser {
         csvMap.put(CsvHeaders.H_DSAR_PARENTS_RECEIVED_TANF, m.getOrDefault("Parents  Received  TANF", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_RECEIVED_SNAP, m.getOrDefault("Student  Received  SNAP", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_RECEIVED_TANF, m.getOrDefault("Student  Received  TANF", ""))
+
+        for ((k, v) in m) {
+            val regex = """Student's  \d{4}  Adjusted Gross  Income""".toRegex()
+            if (regex.matches(k)) {
+                csvMap.put(CsvHeaders.H_DSAR_STUDENT_GROSS_INCOME, v)
+                break
+            }
+        }
+
+        for ((k, v) in m) {
+            val regex = """Parents'  \d{4}  Adjusted Gross  Income""".toRegex()
+            if (regex.matches(k)) {
+                csvMap.put(CsvHeaders.H_DSAR_PARENT_GROSS_INCOME, v)
+                break
+            }
+        }
+
         return csvMap
     }
 }
