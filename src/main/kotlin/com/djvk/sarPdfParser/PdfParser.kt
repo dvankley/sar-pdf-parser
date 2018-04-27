@@ -11,6 +11,7 @@ class PdfParser {
     }
 
     suspend fun processFile(file: File): Map<String, String> {
+        println("Processing file ${file.name}")
         PDDocument.load(file).use { document ->
             val parsedText = HashMap<String, String>()
             val text = getLayoutText(document)

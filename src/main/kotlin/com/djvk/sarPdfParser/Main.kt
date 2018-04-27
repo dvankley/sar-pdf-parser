@@ -19,7 +19,7 @@ object Main {
             val reader = PdfReader(listOfFiles)
             reader.startProcessing()
         } catch (e: Exception) {
-            println("Exception: ${e.dump()}")
+            println("Top level exception: ${e.dump()}")
         }
     }
 }
