@@ -3,6 +3,7 @@ package com.djvk.sarPdfParser
 import com.sun.xml.internal.fastinfoset.util.StringArray
 
 object CsvHeaders {
+    public val H_DSAR_EFC_NUMBER = "EFC Number"
     public val H_DSAR_STUDENT_FIRST_NAME = "Student First Name"
     public val H_DSAR_STUDENT_MIDDLE_NAME = "Student Middle Name"
     public val H_DSAR_STUDENT_LAST_NAME = "Student Last Name"

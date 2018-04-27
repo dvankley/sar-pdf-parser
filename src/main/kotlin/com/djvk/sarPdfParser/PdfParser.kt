@@ -54,6 +54,8 @@ class PdfParser {
 
     fun mapToCSVMap(m: HashMap<String, String>): HashMap<String, String> {
         val csvMap = HashMap<String, String>()
+        csvMap.put(CsvHeaders.H_DSAR_EFC_NUMBER, m.getOrDefault("EFC Number", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_FIRST_NAME, m.getOrDefault("Student’s  Last  Name", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_FIRST_NAME, m.getOrDefault("Student’s  Last  Name", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_MIDDLE_NAME, m.getOrDefault("Student’s  Middle  Initial", ""))
         csvMap.put(CsvHeaders.H_DSAR_STUDENT_LAST_NAME, m.getOrDefault("Student’s  First  Name", ""))
