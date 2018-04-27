@@ -21,13 +21,15 @@ public class CsvWriter(outFile: String) {
         csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( * CsvHeaders.DOC_SAR ) )
     }
 
-    fun insertRow(row: Map<String,String>){
-        csvPrinter.printRecord(getRowValuesInOrder(row))
+    fun insertRow(row: Map<String,String>, fileName: String){
+        val list = getRowValuesInOrder(row)
+        list.add(fileName)
+        csvPrinter.printRecord(list)
     }
 
-    fun insertRows(rows: Array<Map<String,String>>){
+    fun insertRows(rows: Array<Map<String,String>>, fileName: String){
         rows.forEach {
-            insertRow(it)
+            insertRow(it, fileName)
         }
     }
 
@@ -35,7 +37,7 @@ public class CsvWriter(outFile: String) {
         csvPrinter.flush();
     }
 
-    fun getRowValuesInOrder(row: Map<String,String>): List<String> {
+    fun getRowValuesInOrder(row: Map<String,String>): MutableList<String> {
         val ret: MutableList<String> = ArrayList()
         CsvHeaders.DOC_SAR.forEach {
             ret.add(row.get(it) ?: "")

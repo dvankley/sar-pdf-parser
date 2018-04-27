@@ -20,7 +20,7 @@ class PdfReader(private val files: Array<File>) {
             runBlocking {
                 try {
                     val output = jerb.await()
-                    primaryCsvWriter.insertRow(output)
+                    primaryCsvWriter.insertRow(output, fileName)
                 } catch (e: Exception) {
                     println("Error processing file $fileName ${e.dump()}")
 //                errorCsvWriter.insertRow(mapOf(
