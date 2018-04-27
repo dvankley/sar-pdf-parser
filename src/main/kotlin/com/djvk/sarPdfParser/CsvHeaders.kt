@@ -26,6 +26,7 @@ object CsvHeaders {
     public val H_DSAR_STUDENT_RECEIVED_TANF = "Student received TANF"
 
     val DOC_SAR = arrayOf(
+            H_DSAR_EFC_NUMBER,
             H_DSAR_STUDENT_FIRST_NAME,
             H_DSAR_STUDENT_MIDDLE_NAME,
             H_DSAR_STUDENT_LAST_NAME,
