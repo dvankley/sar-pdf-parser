@@ -14,6 +14,10 @@ class PdfParsingTest {
         var fileContents = runBlocking {
             parser.processFile(file)
         }
+        println(fileContents)
+        for ((k, v) in fileContents) {
+            println(k + ": " + v)
+        }
         assertThat(fileContents != null)
     }
 }
