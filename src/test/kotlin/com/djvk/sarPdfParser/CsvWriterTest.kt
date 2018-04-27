@@ -55,5 +55,7 @@ class CsvWriterTest {
         assertEquals(expectedRow,br.readLine())
         assertEquals(expectedRow,br.readLine())
         assertEquals(expectedRow,br.readLine())
+
+        File("csvwritertest.csv").delete()
     }
 }
