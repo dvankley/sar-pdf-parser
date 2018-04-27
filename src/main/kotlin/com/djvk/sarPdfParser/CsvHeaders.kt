@@ -13,7 +13,7 @@ class CsvHeaders {
     public val H_DSAR_PARENT_2_ED_LEVEL = "Parent 2 Educational Level"
     public val H_DSAR_CHILD_SUPPORT_PAID = "Child Support Paid"
     public val H_DSAR_STUDENT_HAS_CHILDREN = "Does student have children they support?"
-    public val H_DSAR_STUDENT_HAS_DEPENDENTS = "Does student have other dependents?"
+    public val H_DSAR_STUDENT_HAS_DEPENDENTS = "Does student have other non-child/non-spouse dependents?"
     public val H_DSAR_DECEASED_PARENTS_COURT_WARD_FOSTER_CARE = "Parents deceased / student ward of court / in foster care"
     public val H_DSAR_EMANCIPATED_MINOR = "Emancipated minor?"
     public val H_DSAR_IN_LEGAL_GUARDIANSHIP = "In legal guardianship?"
