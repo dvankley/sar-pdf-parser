@@ -6,6 +6,8 @@ target/
 .idea/
 *.iml
 
+src/test/resources/sars
+
 # Log file
 *.log
 
