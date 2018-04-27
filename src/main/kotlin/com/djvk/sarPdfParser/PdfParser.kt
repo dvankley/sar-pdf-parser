@@ -14,6 +14,11 @@ class PdfParser {
         val document: PDDocument = PDDocument.load(file)
         val parsedText = HashMap<String, String>()
         val text = getLayoutText(document)
+
+
+        val EFCNUmber = getEFCNumber(text)
+        parsedText.put("EFC Number", EFCNUmber)
+
         val regex = Regex("""^\s*\d+\S?\.(.*)[:\?](.*)${'$'}""", RegexOption.MULTILINE)
         val matchResults = regex.findAll(text)
         for (matchResult in matchResults) {
@@ -24,12 +29,25 @@ class PdfParser {
                 parsedText.put(label, response)
             }
         }
-        return parsedText;
+
+        return parsedText
     }
 
     fun getLayoutText(document: PDDocument): String {
         val stripper = PDFLayoutTextStripper()
         val text = stripper.getText(document)
         return text
+    }
+
+
+    fun getEFCNumber(pdfContent: String): String {
+        val regexForEFCWithLabel = """EFC:\s*\d+""".toRegex()
+        var EFCNUmberWithLabel = regexForEFCWithLabel.find(pdfContent, 0)!!.value
+
+
+        val regexForEFCNumber = """\d+""".toRegex()
+        val EFCNUmber = regexForEFCNumber.find(EFCNUmberWithLabel, 0)!!.value
+
+        return EFCNUmber
     }
 }
