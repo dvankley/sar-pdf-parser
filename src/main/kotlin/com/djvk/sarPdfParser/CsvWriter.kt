@@ -15,11 +15,10 @@ import kotlin.collections.ArrayList
 public class CsvWriter(outFile: String) {
 
     val csvPrinter: CSVPrinter
-    val csvHeaders = CsvHeaders()
 
     init {
         val writer = Files.newBufferedWriter(Paths.get(outFile))
-        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( * csvHeaders.DOC_SAR ) )
+        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( * CsvHeaders.DOC_SAR ) )
     }
 
     fun insertRow(row: Map<String,String>){
@@ -38,7 +37,7 @@ public class CsvWriter(outFile: String) {
 
     fun getRowValuesInOrder(row: Map<String,String>): List<String> {
         val ret: MutableList<String> = ArrayList()
-        csvHeaders.DOC_SAR.forEach {
+        CsvHeaders.DOC_SAR.forEach {
             ret.add(row.get(it) ?: "")
         }
         return ret

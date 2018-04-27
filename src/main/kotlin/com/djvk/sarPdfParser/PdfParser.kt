@@ -30,7 +30,7 @@ class PdfParser {
                     parsedText.put(label, response)
                 }
             }
-            return parsedText
+            return mapToCSVMap(parsedText)
         }
     }
 
@@ -50,5 +50,32 @@ class PdfParser {
         val EFCNUmber = regexForEFCNumber.find(EFCNUmberWithLabel, 0)?.value ?: ""
 
         return EFCNUmber
+    }
+
+    fun mapToCSVMap(m: HashMap<String, String>): HashMap<String, String> {
+        val csvMap = HashMap<String, String>()
+        csvMap.put(CsvHeaders.H_DSAR_EFC_NUMBER, m.getOrDefault("EFC Number", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_FIRST_NAME, m.getOrDefault("Student’s  Last  Name", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_FIRST_NAME, m.getOrDefault("Student’s  Last  Name", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_MIDDLE_NAME, m.getOrDefault("Student’s  Middle  Initial", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_LAST_NAME, m.getOrDefault("Student’s  First  Name", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_DOB, m.getOrDefault("Student's  Date  of  Birth", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_SSN_L4, m.getOrDefault("Student's  Social  Security  Number", ""))
+        csvMap.put(CsvHeaders.H_DSAR_PARENT_1_ED_LEVEL, m.getOrDefault("Parent  1  Educational  Level", ""))
+        csvMap.put(CsvHeaders.H_DSAR_PARENT_2_ED_LEVEL, m.getOrDefault("Parent  2  Educational  Level", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_GROSS_INCOME, m.getOrDefault("Student's  2015  Adjusted Gross  Income", ""))
+        csvMap.put(CsvHeaders.H_DSAR_PARENT_GROSS_INCOME, m.getOrDefault("Parents'  2015  Adjusted Gross  Income", ""))
+        csvMap.put(CsvHeaders.H_DSAR_CHILD_SUPPORT_PAID, m.getOrDefault("Student's  Child  Support Paid", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_HAS_CHILDREN, m.getOrDefault("Does Student Have  Children He/She Supports", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_HAS_DEPENDENTS, m.getOrDefault("Does Student Have  Dependents  Other than  Children/Spouse", ""))
+        csvMap.put(CsvHeaders.H_DSAR_DECEASED_PARENTS_COURT_WARD_FOSTER_CARE, m.getOrDefault("Parents  Deceased?/Student  Ward  of  Court?/In  Foster Care", ""))
+        csvMap.put(CsvHeaders.H_DSAR_EMANCIPATED_MINOR, m.getOrDefault("Is  or Was Student an  Emancipated  Minor", ""))
+        csvMap.put(CsvHeaders.H_DSAR_IN_LEGAL_GUARDIANSHIP, m.getOrDefault("Is  or Was Student in  Legal  Guardianship", ""))
+        csvMap.put(CsvHeaders.H_DSAR_UNACCOMPANIED_HOMELESS_YOUTH, m.getOrDefault("Is  Student an  Unaccompanied  Homeless  Youth  as  Determined  by  Director  of Homeless  Youth  Center", ""))
+        csvMap.put(CsvHeaders.H_DSAR_PARENTS_RECEIVED_SNAP, m.getOrDefault("Parents  Received  SNAP", ""))
+        csvMap.put(CsvHeaders.H_DSAR_PARENTS_RECEIVED_TANF, m.getOrDefault("Parents  Received  TANF", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_RECEIVED_SNAP, m.getOrDefault("Student  Received  SNAP", ""))
+        csvMap.put(CsvHeaders.H_DSAR_STUDENT_RECEIVED_TANF, m.getOrDefault("Student  Received  TANF", ""))
+        return csvMap
     }
 }
