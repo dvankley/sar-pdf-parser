@@ -1,9 +1,10 @@
 package com.djvk.sarPdfParser
 
+import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import kotlinx.coroutines.experimental.*
 import java.io.File
 
-class PdfReader(val files: Array<File>) {
+class PdfReader(private val files: Array<File>) {
     fun startProcessing() {
         val parser = PdfParser()
         val CsvWriter = CsvWriter("outfile.csv")
@@ -11,7 +12,11 @@ class PdfReader(val files: Array<File>) {
         val jerbs: MutableList<Deferred<Map<String, String>>> = ArrayList()
         files.forEach({ file ->
             jerbs.add(async(context, CoroutineStart.DEFAULT, {
-                parser.processFile(file)
+                try {
+                    parser.processFile(file)
+                } catch (e: Exception) {
+                    throw FileProcessingException(file.name, e)
+                }
             }))
         })
         jerbs.forEach({ jerb ->
