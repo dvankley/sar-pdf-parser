@@ -9,10 +9,9 @@ class PdfParser {
         System.setProperty("sun.java2d.cmm", "sun.java2d.cmm.kcms.KcmsServiceProvider")
     }
 
-    suspend fun processFile(file: File) {
+    suspend fun processFile(file: File): Map<String, String> {
         val document: PDDocument = PDDocument.load(file)
 
-        // do stuff
-
+        return HashMap()
     }
 }
