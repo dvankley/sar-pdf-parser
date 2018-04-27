@@ -8,20 +8,40 @@ import org.apache.commons.csv.CSVPrinter
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.io.BufferedWriter
+import kotlin.collections.ArrayList
+
 
 public class CsvWriter(outFile: String) {
 
-    fun init() {
+    val csvPrinter: CSVPrinter
+    val csvHeaders = CsvHeaders()
 
+    init {
+        val writer = Files.newBufferedWriter(Paths.get(outFile))
+        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( * csvHeaders.DOC_SAR ) )
     }
 
-    fun insertRow(row: Array<Map<String,String>>){
+    fun insertRow(row: Map<String,String>){
+        csvPrinter.printRecord(getRowValuesInOrder(row))
+    }
 
+    fun insertRows(rows: Array<Map<String,String>>){
+        rows.forEach {
+            insertRow(it)
+        }
     }
 
     fun finish(){
-
+        csvPrinter.flush();
     }
 
+    fun getRowValuesInOrder(row: Map<String,String>): List<String> {
+        val ret: MutableList<String> = ArrayList()
+        csvHeaders.DOC_SAR.forEach {
+            ret.add(row.get(it) ?: "")
+        }
+        return ret
+    }
 
 }
