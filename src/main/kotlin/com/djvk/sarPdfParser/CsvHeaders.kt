@@ -4,7 +4,7 @@ import com.sun.xml.internal.fastinfoset.util.StringArray
 
 class CsvHeaders {
 
-    public val H_DSAR_STUDENT_FIRST_NAME = "Student Last Name"
+    public val H_DSAR_STUDENT_FIRST_NAME = "Student First Name"
     public val H_DSAR_STUDENT_MIDDLE_NAME = "Student Middle Name"
     public val H_DSAR_STUDENT_LAST_NAME = "Student Last Name"
     public val H_DSAR_STUDENT_DOB = "Student Date of Birth"
