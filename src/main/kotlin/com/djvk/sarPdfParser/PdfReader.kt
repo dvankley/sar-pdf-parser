@@ -23,13 +23,14 @@ class PdfReader(private val files: Array<File>) {
                     primaryCsvWriter.insertRow(output, fileName)
                 } catch (e: Exception) {
                     println("Error processing file $fileName ${e.dump()}")
-//                errorCsvWriter.insertRow(mapOf(
-//                        "filename" to file.name,
-//                        "error" to e.localizedMessage
-//                ))
+                    errorCsvWriter.insertRow(mapOf(
+                            CsvHeaders.H_ERRORS_ERROR to e.localizedMessage,
+                            CsvHeaders.H_ERRORS_FILENAME to fileName
+                    ), fileName)
                 }
             }
         })
+        errorCsvWriter.finish()
         primaryCsvWriter.finish()
     }
 }
