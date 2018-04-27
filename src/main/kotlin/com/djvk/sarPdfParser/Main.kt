@@ -1,5 +1,6 @@
 package com.djvk.sarPdfParser
 
+import com.djvk.sarPdfParser.exceptions.dump
 import org.apache.commons.cli.DefaultParser
 import java.io.File
 
@@ -18,7 +19,7 @@ object Main {
             val reader = PdfReader(listOfFiles)
             reader.startProcessing()
         } catch (e: Exception) {
-            println("Exception: ${e.localizedMessage}\n Stack trace: ${e.stackTrace}")
+            println("Exception: ${e.dump()}")
         }
     }
 }
