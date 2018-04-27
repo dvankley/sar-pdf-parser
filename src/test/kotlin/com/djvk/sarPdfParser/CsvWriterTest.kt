@@ -6,6 +6,11 @@ import kotlinx.coroutines.experimental.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.File
+import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
+import java.io.FileReader
+import java.io.BufferedReader
+import kotlin.test.assertEquals
+
 
 class CsvWriterTest {
     @Test
@@ -13,6 +18,9 @@ class CsvWriterTest {
 
         val subject: CsvWriter = CsvWriter("csvwritertest.csv")
         val csvHeaders = CsvHeaders();
+
+        val expectedHeader = "Student First Name,Student Middle Name,Student Last Name,Student Date of Birth,Social Security Number Last 4 Digits,Parent 1 Educational Level,Parent 2 Educational Level,Child Support Paid,Does student have children they support?,Does student have other non-child/non-spouse dependents?,Parents deceased / student ward of court / in foster care,Emancipated minor?,In legal guardianship?,Unaccompanied homeless youth,Parents received SNAP,Parents received TANF,Student received SNAP,Student received TANF";
+        val expectedRow = "first name,middle name,last name,std dob,123-12-1234,parent ed 1,parent ed 2,child support,yes,2,no,yes,no,yes,1,2,3,4"
 
         val testmap = hashMapOf(
                 csvHeaders.H_DSAR_STUDENT_FIRST_NAME to "first name",
@@ -36,9 +44,16 @@ class CsvWriterTest {
         )
 
         subject.insertRow(testmap)
+        subject.insertRow(testmap)
+        subject.insertRow(testmap)
 
         subject.finish()
 
-        assert(true);
+        val br = BufferedReader(FileReader("csvwritertest.csv"))
+
+        assertEquals(expectedHeader,br.readLine());
+        assertEquals(expectedRow,br.readLine())
+        assertEquals(expectedRow,br.readLine())
+        assertEquals(expectedRow,br.readLine())
     }
 }
