@@ -30,5 +30,6 @@ class PdfReader(private val files: Array<File>) {
                 }
             }
         })
+        primaryCsvWriter.finish()
     }
 }
