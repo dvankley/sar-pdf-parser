@@ -1,12 +1,24 @@
 package com.djvk.sarPdfParser
 
 import org.apache.commons.cli.DefaultParser
+import java.io.File
 
 object Main {
     @JvmStatic fun main(args : Array<String>) {
-        val parser = DefaultParser()
-        val line = parser.parse(ArgumentParser.getDefaultOptions(), args)
+        try {
+            val parser = DefaultParser()
+            val line = parser.parse(ArgumentParser.getDefaultOptions(), args)
 
-        println("Target directory: ${line.getOptionValue("d")}")
+            val directoryPath = line.getOptionValue("d") ?: throw IllegalArgumentException("Could not parse input directory")
+            println("Target directory: $directoryPath")
+
+            val folder = File(directoryPath)
+            val listOfFiles = folder.listFiles { dir, filename -> filename.toLowerCase().endsWith(".pdf")}
+
+            val reader = PdfReader(listOfFiles)
+            reader.startProcessing()
+        } catch (e: Exception) {
+            println("Exception: ${e.localizedMessage}\n Stack trace: ${e.stackTrace}")
+        }
     }
 }
