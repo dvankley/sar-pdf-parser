@@ -40,7 +40,7 @@ class CsvWriter(outFile: String, val docType: CsvHeaders.DocType) {
     private fun getRowValuesInOrder(row: Map<String,String>): MutableList<String> {
         val ret: MutableList<String> = ArrayList()
         getHeaders(docType).forEach {
-            val fieldName = PdfFieldNormalizer.normalize(it.pdfFieldName)
+            val fieldName = PdfNormalizer.normalizeField(it.pdfFieldName)
             ret.add(row[fieldName] ?: "")
         }
         return ret

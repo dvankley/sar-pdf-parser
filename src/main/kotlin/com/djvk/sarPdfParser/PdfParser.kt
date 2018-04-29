@@ -26,7 +26,7 @@ class PdfParser {
                 if (groups.size == 3) {
                     val label = groups[1]!!.value.trim()
                     val response = groups[2]!!.value.trim()
-                    parsedText.put(PdfFieldNormalizer.normalize(label), response)
+                    parsedText[PdfNormalizer.normalizeField(label)] = response
                 }
             }
             return mapToCSVMap(parsedText)
@@ -50,10 +50,10 @@ class PdfParser {
     private fun mapToCSVMap(m: HashMap<String, String>): HashMap<String, String> {
         val csvMap = HashMap<String, String>()
         for (header in CsvHeaders.Fields.values()) {
-            val normalizedFieldName = PdfFieldNormalizer.normalize(header.pdfFieldName)
+            val normalizedFieldName = PdfNormalizer.normalizeField(header.pdfFieldName)
             val fieldValue = m[normalizedFieldName]
             if (fieldValue != null) {
-                csvMap[normalizedFieldName] = fieldValue
+                csvMap[normalizedFieldName] = PdfNormalizer.normalizeValue(fieldValue)
             }
         }
 
