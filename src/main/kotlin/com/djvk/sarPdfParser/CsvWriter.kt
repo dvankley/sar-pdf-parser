@@ -7,11 +7,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.collections.ArrayList
 
-
-class CsvWriter(outFile: String, docType: CsvHeaders.DocType) {
-
-    val csvPrinter: CSVPrinter
-    val docType = docType
+class CsvWriter(outFile: String, val docType: CsvHeaders.DocType) {
+    private val csvPrinter: CSVPrinter
     init {
         val writer = Files.newBufferedWriter(Paths.get(outFile))
         val headers = getHeaders(docType)
@@ -20,7 +17,7 @@ class CsvWriter(outFile: String, docType: CsvHeaders.DocType) {
         csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( *headers))
     }
 
-    fun getHeaders(docType: CsvHeaders.DocType): List<CsvHeaders.Fields> {
+    private fun getHeaders(docType: CsvHeaders.DocType): List<CsvHeaders.Fields> {
         return CsvHeaders.Fields.values()
                 .filter { it.docType == docType || it.docType == CsvHeaders.DocType.ALL }
     }
@@ -40,7 +37,7 @@ class CsvWriter(outFile: String, docType: CsvHeaders.DocType) {
         csvPrinter.flush();
     }
 
-    fun getRowValuesInOrder(row: Map<String,String>): MutableList<String> {
+    private fun getRowValuesInOrder(row: Map<String,String>): MutableList<String> {
         val ret: MutableList<String> = ArrayList()
         getHeaders(docType).forEach {
             val fieldName = PdfFieldNormalizer.normalize(it.pdfFieldName)
@@ -48,5 +45,4 @@ class CsvWriter(outFile: String, docType: CsvHeaders.DocType) {
         }
         return ret
     }
-
 }
