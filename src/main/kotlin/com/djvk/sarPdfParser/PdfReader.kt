@@ -7,8 +7,8 @@ import java.io.File
 class PdfReader(private val files: Array<File>) {
     fun startProcessing() {
         val parser = PdfParser()
-        val primaryCsvWriter = CsvWriter("outfile.csv", CsvHeaders.DocType.DOCTYPE_SAR)
-        val errorCsvWriter = CsvWriter("errors.csv", CsvHeaders.DocType.DOCTYPE_ERROR)
+        val primaryCsvWriter = CsvWriter("outfile.csv", CsvHeaders.DocType.SAR)
+        val errorCsvWriter = CsvWriter("errors.csv", CsvHeaders.DocType.ERROR)
         val context = CommonPool
         val jerbs: MutableList<Pair<String, Deferred<Map<String, String>>>> = ArrayList()
         files.forEach({ file ->
@@ -24,8 +24,8 @@ class PdfReader(private val files: Array<File>) {
                 } catch (e: Exception) {
                     println("Error processing file $fileName ${e.dump()}")
                     errorCsvWriter.insertRow(mapOf(
-                            CsvHeaders.H_ERRORS_FILENAME to fileName,
-                            CsvHeaders.H_ERRORS_ERROR to e.localizedMessage
+                            CsvHeaders.Fields.FILENAME.csvFieldName to fileName,
+                            CsvHeaders.Fields.ERROR.csvFieldName to e.localizedMessage
                     ))
                 }
             }
