@@ -11,7 +11,7 @@
 
     <groupId>com.djvk.sarPdfParser</groupId>
     <artifactId>sar-pdf-parser</artifactId>
-    <version>1.2</version>
+    <version>1.3</version>
     <packaging>jar</packaging>
 
     <name>sarPdfParser</name>
@@ -28,7 +28,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mainClass>com.djvk.sarPdfParser.Main</mainClass>
-        <kotlin.version>1.2.40</kotlin.version>
+        <kotlin.version>1.2.41</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <jackson.version>2.9.0</jackson.version>
     </properties>

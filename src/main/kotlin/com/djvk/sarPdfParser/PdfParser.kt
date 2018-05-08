@@ -17,7 +17,7 @@ class PdfParser {
 
 
             val efcNumber = getEFCNumber(text)
-            parsedText["EFC Number"] = efcNumber
+            parsedText[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = efcNumber
 
             val regex = Regex("""^\s*\d+\S?\.(.*)[:\?](.*)${'$'}""", RegexOption.MULTILINE)
             val matchResults = regex.findAll(text)
@@ -40,7 +40,8 @@ class PdfParser {
 
 
     private fun getEFCNumber(pdfContent: String): String {
-        val regexForEFCWithLabel = """EFC:\s*\d+""".toRegex()
+        // Regex contains a bunch of goofy alternate space characters
+        val regexForEFCWithLabel = """EFC:[\s\u00A0\u200B\u2060\uFEFF]*\d+""".toRegex()
         val efcNumberWithLabel = regexForEFCWithLabel.find(pdfContent, 0)?.value ?: ""
 
         val regexForEFCNumber = """\d+""".toRegex()
