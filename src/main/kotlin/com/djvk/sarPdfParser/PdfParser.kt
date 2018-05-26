@@ -1,5 +1,6 @@
 package com.djvk.sarPdfParser
 
+import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
 
@@ -12,32 +13,26 @@ class PdfParser {
     suspend fun processFile(file: File): Map<String, String> {
         println("Processing file ${file.name}")
         PDDocument.load(file).use { document ->
-            val parsedText = HashMap<String, String>()
             val text = getLayoutText(document)
-
-
-            val efcNumber = getEFCNumber(text)
-            parsedText[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = efcNumber
-
-            val regex = Regex("""^\s*\d+\S?\.(.*)[:\?](.*)${'$'}""", RegexOption.MULTILINE)
-            val matchResults = regex.findAll(text)
-            for (matchResult in matchResults) {
-                val groups = matchResult.groups
-                if (groups.size == 3) {
-                    val label = groups[1]!!.value.trim()
-                    val response = groups[2]!!.value.trim()
-                    parsedText[PdfNormalizer.normalizeField(label)] = response
-                }
+            if (text.isEmpty() || text.isBlank()) {
+                throw FileProcessingException(file.name, RuntimeException("No content parsed from file"))
             }
-            return mapToCSVMap(parsedText)
+            val parsedValues = HashMap<String, String>()
+            try {
+                parseGlobalFields(text, parsedValues)
+                parseTableFields(text, parsedValues)
+            } catch (e: Exception) {
+                throw FileProcessingException(file.name, e)
+            }
+
+            return mapToCSVMap(parsedValues)
         }
     }
 
-    private fun getLayoutText(document: PDDocument): String {
-        val stripper = PDFLayoutTextStripper()
-        return stripper.getText(document)
+    private fun parseGlobalFields(text: String, parsedValues: MutableMap<String, String>) {
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = getEFCNumber(text)
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.YEAR.pdfFieldName)] = getYear(text)
     }
-
 
     private fun getEFCNumber(pdfContent: String): String {
         // Regex contains a bunch of goofy alternate space characters
@@ -46,6 +41,33 @@ class PdfParser {
 
         val regexForEFCNumber = """\d+""".toRegex()
         return regexForEFCNumber.find(efcNumberWithLabel, 0)?.value ?: ""
+    }
+
+    fun getYear(pdfContent: String): String {
+        val dashes = PdfNormalizer.groupByAsciiForRegex('-')
+        val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
+        val yearRegex = """(\d{4}[$spaces]*[$dashes][$spaces]*\d{4})[$spaces]*Free[$spaces]*Application[$spaces]*for[$spaces]*Federal""".toRegex()
+        val yearMatch = yearRegex.find(pdfContent)?.groupValues?.get(1)
+
+        return PdfNormalizer.normalizeValue(yearMatch ?: throw RuntimeException("Failed to find SAR year in PDF"))
+    }
+
+    private fun parseTableFields(text: String, parsedValues: MutableMap<String, String>) {
+        val regex = Regex("""^\s*\d+\S?\.(.*)[:\?](.*)${'$'}""", RegexOption.MULTILINE)
+        val matchResults = regex.findAll(text)
+        for (matchResult in matchResults) {
+            val groups = matchResult.groups
+            if (groups.size == 3) {
+                val label = groups[1]!!.value.trim()
+                val response = groups[2]!!.value.trim()
+                parsedValues[PdfNormalizer.normalizeField(label)] = response
+            }
+        }
+    }
+
+    private fun getLayoutText(document: PDDocument): String {
+        val stripper = PDFLayoutTextStripper()
+        return stripper.getText(document)
     }
 
     private fun mapToCSVMap(m: HashMap<String, String>): HashMap<String, String> {
