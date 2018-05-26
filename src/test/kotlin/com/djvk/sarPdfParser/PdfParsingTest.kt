@@ -31,7 +31,7 @@ class PdfParsingTest {
 
 
              Application Receipt Date:       01/02/2016       XXX­XX­1234 CR 05
-             Processed Date:                 01/03/2016       EFC: 000000
+             Processed Date:                 01/03/2016       EFC: 123456
                                                               DRN: 0123
 
 
@@ -75,7 +75,7 @@ class PdfParsingTest {
 
 
      Application  Receipt  Date:           01/02/2018                            XXX-XX-1234  KE  01
-     Processed Date:                       01/03/2018                            EFC:  000000
+     Processed Date:                       01/03/2018                            EFC:  888888   *
                                                                                  DRN:   0123
 
 
@@ -213,5 +213,23 @@ class PdfParsingTest {
         val year = parser.getYear(testHeader2)
 
         assertThat(year).isEqualTo("2018-2019")
+    }
+
+    @Test
+    fun testGetEfc1() {
+        val parser = PdfParser()
+        val (efc, isStarred) = parser.getEFCNumber(testHeader1)
+
+        assertThat(efc).isEqualTo("123456")
+        assertThat(isStarred).isEqualTo(false)
+    }
+
+    @Test
+    fun testGetEfc2() {
+        val parser = PdfParser()
+        val (efc, isStarred) = parser.getEFCNumber(testHeader2)
+
+        assertThat(efc).isEqualTo("888888")
+        assertThat(isStarred).isEqualTo(true)
     }
 }

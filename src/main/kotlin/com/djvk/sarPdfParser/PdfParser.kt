@@ -30,17 +30,20 @@ class PdfParser {
     }
 
     private fun parseGlobalFields(text: String, parsedValues: MutableMap<String, String>) {
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = getEFCNumber(text)
+        val (efc, isStarred) = getEFCNumber(text)
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = efc ?: ""
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.IS_EFC_STARRED.pdfFieldName)] = if (isStarred) "1" else "0"
         parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.YEAR.pdfFieldName)] = getYear(text)
     }
 
-    private fun getEFCNumber(pdfContent: String): String {
+    fun getEFCNumber(pdfContent: String): Pair<String?, Boolean> {
         // Regex contains a bunch of goofy alternate space characters
-        val regexForEFCWithLabel = """EFC:[\s\u00A0\u200B\u2060\uFEFF]*\d+""".toRegex()
-        val efcNumberWithLabel = regexForEFCWithLabel.find(pdfContent, 0)?.value ?: ""
+        val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
+        val regex = """EFC:[$spaces]*(\d+)[$spaces]*(\*)?""".toRegex()
+        val rawEfc = regex.find(pdfContent, 0)
 
-        val regexForEFCNumber = """\d+""".toRegex()
-        return regexForEFCNumber.find(efcNumberWithLabel, 0)?.value ?: ""
+
+        return Pair(rawEfc?.groupValues?.get(1), rawEfc?.groups?.get(2) != null)
     }
 
     fun getYear(pdfContent: String): String {

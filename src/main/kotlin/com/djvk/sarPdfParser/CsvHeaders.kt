@@ -3,6 +3,7 @@ package com.djvk.sarPdfParser
 object CsvHeaders {
     enum class Fields(val docType: DocType, val csvFieldName: String, val pdfFieldName: String) {
         EFC_NUMBER(DocType.SAR, "EFC Number", "EFC Number"),
+        IS_EFC_STARRED(DocType.SAR, "Is EFC Starred", "Is EFC Starred"),
         YEAR(DocType.SAR, "Year", "Year"),
         STUDENT_FIRST_NAME(DocType.SAR, "Student First Name", "Student’s  First  Name"),
         STUDENT_MIDDLE_NAME(DocType.SAR, "Student Middle Name", "Student’s  Middle  Initial"),
