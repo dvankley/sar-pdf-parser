@@ -30,21 +30,34 @@ class PdfParser {
     }
 
     private fun parseGlobalFields(text: String, parsedValues: MutableMap<String, String>) {
-        val (efc, isStarred) = getEFCNumber(text)
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = efc ?: ""
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.IS_EFC_STARRED.pdfFieldName)] = if (isStarred) "1" else "0"
+        val efc = getEFCNumber(text)
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = efc.number ?: ""
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.IS_EFC_STARRED.pdfFieldName)] = if (efc.isStarred) "1" else "0"
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.HAS_EFC_C_SUFFIX.pdfFieldName)] = if (efc.hasCSuffix) "1" else "0"
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.HAS_EFC_H_SUFFIX.pdfFieldName)] = if (efc.hasHSuffix) "1" else "0"
         parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.YEAR.pdfFieldName)] = getYear(text)
     }
 
-    fun getEFCNumber(pdfContent: String): Pair<String?, Boolean> {
+    fun getEFCNumber(pdfContent: String): EfcData {
         // Regex contains a bunch of goofy alternate space characters
         val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
-        val regex = """EFC:[$spaces]*(\d+)[$spaces]*(\*)?""".toRegex()
+        val regex = """EFC:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(RegexOption.IGNORE_CASE)
         val rawEfc = regex.find(pdfContent, 0)
 
-
-        return Pair(rawEfc?.groupValues?.get(1), rawEfc?.groups?.get(2) != null)
+        return EfcData(
+                rawEfc?.groupValues?.get(1),
+                rawEfc?.groups?.get(2) != null,
+                rawEfc?.groupValues?.get(3)?.toLowerCase() == "c",
+                rawEfc?.groupValues?.get(3)?.toLowerCase() == "h"
+        )
     }
+
+    data class EfcData(
+            val number: String?,
+            val isStarred: Boolean,
+            val hasCSuffix: Boolean,
+            val hasHSuffix: Boolean
+    )
 
     fun getYear(pdfContent: String): String {
         val dashes = PdfNormalizer.groupByAsciiForRegex('-')

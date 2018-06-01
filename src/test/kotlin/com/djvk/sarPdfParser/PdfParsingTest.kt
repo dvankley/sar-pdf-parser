@@ -75,7 +75,7 @@ class PdfParsingTest {
 
 
      Application  Receipt  Date:           01/02/2018                            XXX-XX-1234  KE  01
-     Processed Date:                       01/03/2018                            EFC:  888888   *
+     Processed Date:                       01/03/2018                            EFC:  888888   *    H
                                                                                  DRN:   0123
 
 
@@ -218,18 +218,22 @@ class PdfParsingTest {
     @Test
     fun testGetEfc1() {
         val parser = PdfParser()
-        val (efc, isStarred) = parser.getEFCNumber(testHeader1)
+        val result = parser.getEFCNumber(testHeader1)
 
-        assertThat(efc).isEqualTo("123456")
-        assertThat(isStarred).isEqualTo(false)
+        assertThat(result.number).isEqualTo("123456")
+        assertThat(result.isStarred).isEqualTo(false)
+        assertThat(result.hasCSuffix).isEqualTo(false)
+        assertThat(result.hasHSuffix).isEqualTo(false)
     }
 
     @Test
     fun testGetEfc2() {
         val parser = PdfParser()
-        val (efc, isStarred) = parser.getEFCNumber(testHeader2)
+        val result = parser.getEFCNumber(testHeader2)
 
-        assertThat(efc).isEqualTo("888888")
-        assertThat(isStarred).isEqualTo(true)
+        assertThat(result.number).isEqualTo("888888")
+        assertThat(result.isStarred).isEqualTo(true)
+        assertThat(result.hasCSuffix).isEqualTo(false)
+        assertThat(result.hasHSuffix).isEqualTo(true)
     }
 }
