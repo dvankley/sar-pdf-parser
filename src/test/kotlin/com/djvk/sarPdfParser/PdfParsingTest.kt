@@ -236,4 +236,24 @@ class PdfParsingTest {
         assertThat(result.hasCSuffix).isEqualTo(false)
         assertThat(result.hasHSuffix).isEqualTo(true)
     }
+
+    @Test
+    fun testGetDate1() {
+        val parser = PdfParser()
+        val receipt = parser.getDate(testHeader1, parser.applicationReceiptPrefix)
+        val processed = parser.getDate(testHeader1, parser.processedPrefix)
+
+        assertThat(receipt).isEqualTo("01/02/2016")
+        assertThat(processed).isEqualTo("01/03/2016")
+    }
+
+    @Test
+    fun testGetDate2() {
+        val parser = PdfParser()
+        val receipt = parser.getDate(testHeader2, parser.applicationReceiptPrefix)
+        val processed = parser.getDate(testHeader2, parser.processedPrefix)
+
+        assertThat(receipt).isEqualTo("01/02/2018")
+        assertThat(processed).isEqualTo("01/03/2018")
+    }
 }

@@ -5,6 +5,9 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
 
 class PdfParser {
+    private val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
+    val applicationReceiptPrefix = """Application[$spaces]*Receipt"""
+    val processedPrefix = """Processed"""
     init {
         // PDFBox said to use this for JDK8 and later
         System.setProperty("sun.java2d.cmm", "sun.java2d.cmm.kcms.KcmsServiceProvider")
@@ -35,12 +38,21 @@ class PdfParser {
         parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.IS_EFC_STARRED.pdfFieldName)] = if (efc.isStarred) "1" else "0"
         parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.HAS_EFC_C_SUFFIX.pdfFieldName)] = if (efc.hasCSuffix) "1" else "0"
         parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.HAS_EFC_H_SUFFIX.pdfFieldName)] = if (efc.hasHSuffix) "1" else "0"
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.RECEIVED_DATE.pdfFieldName)] = getDate(text, applicationReceiptPrefix)
+        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.PROCESSED_DATE.pdfFieldName)] = getDate(text, processedPrefix)
         parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.YEAR.pdfFieldName)] = getYear(text)
+    }
+
+    fun getDate(pdfContent: String, prefixString: String): String {
+        val dateRegex = """\d{2}/\d{2}/\d{4}"""
+        val regex = """$prefixString[$spaces]*Date:[$spaces]*($dateRegex)""".toRegex(RegexOption.IGNORE_CASE)
+        val rawDate = regex.find(pdfContent, 0)
+
+        return rawDate?.groupValues?.get(1) ?: throw RuntimeException("Failed to find $prefixString date")
     }
 
     fun getEFCNumber(pdfContent: String): EfcData {
         // Regex contains a bunch of goofy alternate space characters
-        val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
         val regex = """EFC:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(RegexOption.IGNORE_CASE)
         val rawEfc = regex.find(pdfContent, 0)
 

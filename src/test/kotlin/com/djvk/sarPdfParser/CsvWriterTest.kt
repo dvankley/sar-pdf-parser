@@ -13,14 +13,16 @@ class CsvWriterTest {
 
         var subject = CsvWriter(testFilename, CsvHeaders.DocType.SAR)
 
-        var expectedHeader = "EFC Number,Is EFC Starred,Has EFC C Suffix,Has EFC H Suffix,Year,Student First Name,Student Middle Name,Student Last Name,Student Date of Birth,Social Security Number Last 4 Digits,Parent 1 Educational Level,Parent 2 Educational Level,Student's  2015  Adjusted Gross  Income,Parents'  2015  Adjusted Gross  Income,Child Support Paid,Does student have children they support?,Does student have other non-child/non-spouse dependents?,Parents deceased / student ward of court / in foster care,Emancipated minor?,In legal guardianship?,Unaccompanied homeless youth,Parents received SNAP,Parents received TANF,Student received SNAP,Student received TANF,Filename"
-        var expectedRow = "EFC number,1,0,1,2016-2015,first name,middle name,last name,std dob,123-12-1234,parent ed 1,parent ed 2,,,child support,yes,2,no,yes,no,yes,1,2,3,4,"
+        var expectedHeader = "EFC Number,Is EFC Starred,Has EFC C Suffix,Has EFC H Suffix,Received Date,Processed Date,Year,Student First Name,Student Middle Name,Student Last Name,Student Date of Birth,Social Security Number Last 4 Digits,Parent 1 Educational Level,Parent 2 Educational Level,Student's  2015  Adjusted Gross  Income,Parents'  2015  Adjusted Gross  Income,Child Support Paid,Does student have children they support?,Does student have other non-child/non-spouse dependents?,Parents deceased / student ward of court / in foster care,Emancipated minor?,In legal guardianship?,Unaccompanied homeless youth,Parents received SNAP,Parents received TANF,Student received SNAP,Student received TANF,Filename"
+        var expectedRow = "EFC number,1,0,1,01/02/2016,03/04/2017,2016-2015,first name,middle name,last name,std dob,123-12-1234,parent ed 1,parent ed 2,,,child support,yes,2,no,yes,no,yes,1,2,3,4,"
 
         val testmap = hashMapOf(
                 CsvHeaders.Fields.EFC_NUMBER to "EFC number",
                 CsvHeaders.Fields.IS_EFC_STARRED to "1",
                 CsvHeaders.Fields.HAS_EFC_C_SUFFIX to "0",
                 CsvHeaders.Fields.HAS_EFC_H_SUFFIX to "1",
+                CsvHeaders.Fields.RECEIVED_DATE to "01/02/2016",
+                CsvHeaders.Fields.PROCESSED_DATE to "03/04/2017",
                 CsvHeaders.Fields.YEAR to "2016-2015",
                 CsvHeaders.Fields.STUDENT_FIRST_NAME to "first name",
                 CsvHeaders.Fields.STUDENT_MIDDLE_NAME to "middle name",

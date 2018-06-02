@@ -6,6 +6,8 @@ object CsvHeaders {
         IS_EFC_STARRED(DocType.SAR, "Is EFC Starred", "Is EFC Starred"),
         HAS_EFC_C_SUFFIX(DocType.SAR, "Has EFC C Suffix", "Has EFC C Suffix"),
         HAS_EFC_H_SUFFIX(DocType.SAR, "Has EFC H Suffix", "Has EFC H Suffix"),
+        RECEIVED_DATE(DocType.SAR, "Received Date", "Received Date"),
+        PROCESSED_DATE(DocType.SAR, "Processed Date", "Processed Date"),
         YEAR(DocType.SAR, "Year", "Year"),
         STUDENT_FIRST_NAME(DocType.SAR, "Student First Name", "Student’s  First  Name"),
         STUDENT_MIDDLE_NAME(DocType.SAR, "Student Middle Name", "Student’s  Middle  Initial"),
