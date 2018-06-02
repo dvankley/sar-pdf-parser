@@ -11,7 +11,7 @@
 
     <groupId>com.djvk.sarPdfParser</groupId>
     <artifactId>sar-pdf-parser</artifactId>
-    <version>1.4</version>
+    <version>1.5</version>
     <packaging>jar</packaging>
 
     <name>sarPdfParser</name>
