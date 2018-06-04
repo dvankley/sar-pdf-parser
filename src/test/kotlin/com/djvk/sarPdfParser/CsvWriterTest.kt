@@ -92,6 +92,6 @@ class CsvWriterTest {
     }
 
     private fun normalizeTestMap(map: Map<CsvHeaders.Fields, String>): Map<String, String> {
-        return map.keys.associate { Pair(PdfNormalizer.normalizeField(it.pdfFieldName), map[it]!!) }
+        return map.keys.associate { Pair(PdfNormalizer.normalizeField(it.csvFieldName), map[it]!!) }
     }
 }
