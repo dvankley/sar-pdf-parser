@@ -1,6 +1,13 @@
 package com.djvk.sarPdfParser
 
 object CsvHeaders {
+    val fieldsByNormalizedPdfName = Fields.values().associateBy { PdfNormalizer.normalizeField(it.pdfFieldName) }.toMutableMap()
+
+    init {
+        fieldsByNormalizedPdfName[PdfNormalizer.normalizeField("Is Student an Unaccompanied Homeless Youth as Determined by HUD")] = Fields.UNACCOMPANIED_HOMELESS_YOUTH
+        fieldsByNormalizedPdfName[PdfNormalizer.normalizeField("Is Student an Unaccompanied Homeless Youth as Determined by High School/Homeless Liaison")] = Fields.UNACCOMPANIED_HOMELESS_YOUTH
+    }
+
     enum class Fields(val docType: DocType, val csvFieldName: String, val pdfFieldName: String) {
         EFC_NUMBER(DocType.SAR, "EFC Number", "EFC Number"),
         IS_EFC_STARRED(DocType.SAR, "Is EFC Starred", "Is EFC Starred"),
@@ -35,8 +42,6 @@ object CsvHeaders {
 
         FILENAME(DocType.ALL, "Filename", "Filename");
     }
-
-    val fieldsByNormalizedPdfName = Fields.values().associateBy { PdfNormalizer.normalizeField(it.pdfFieldName) }
 
     enum class DocType {
         SAR, ERROR, ALL

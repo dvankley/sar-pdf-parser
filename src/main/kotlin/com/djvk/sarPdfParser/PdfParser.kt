@@ -89,9 +89,18 @@ class PdfParser {
                 val label = PdfNormalizer.normalizeField(groups[1]!!.value.trim())
                 val field = CsvHeaders.fieldsByNormalizedPdfName[label] ?: continue
                 val response = groups[2]!!.value.trim()
-                parsedValues[field] = response
+                parsedValues[field] = getFieldValue(field, response, parsedValues)
             }
         }
+    }
+
+    private fun getFieldValue(field: CsvHeaders.Fields, rawValue: String, parsedValues: Map<CsvHeaders.Fields, String>): String {
+        if (field == CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH) {
+            val newBooleanValue = rawValue.toLowerCase().trim() == "yes"
+            val oldBooleanValue = parsedValues[CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH]?.toLowerCase()?.trim() == "yes"
+            return if (newBooleanValue || oldBooleanValue) "YES" else "NO"
+        }
+        return rawValue
     }
 
     private fun getLayoutText(document: PDDocument): String {
