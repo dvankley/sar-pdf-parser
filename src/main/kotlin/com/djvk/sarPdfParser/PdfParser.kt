@@ -20,7 +20,7 @@ class PdfParser {
             if (text.isEmpty() || text.isBlank()) {
                 throw FileProcessingException(file.name, RuntimeException("No content parsed from file"))
             }
-            val parsedValues = HashMap<String, String>()
+            val parsedValues = HashMap<CsvHeaders.Fields, String>()
             try {
                 parseGlobalFields(text, parsedValues)
                 parseTableFields(text, parsedValues)
@@ -32,15 +32,15 @@ class PdfParser {
         }
     }
 
-    private fun parseGlobalFields(text: String, parsedValues: MutableMap<String, String>) {
+    private fun parseGlobalFields(text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
         val efc = getEFCNumber(text)
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.EFC_NUMBER.pdfFieldName)] = efc.number ?: ""
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.IS_EFC_STARRED.pdfFieldName)] = if (efc.isStarred) "1" else "0"
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.HAS_EFC_C_SUFFIX.pdfFieldName)] = if (efc.hasCSuffix) "1" else "0"
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.HAS_EFC_H_SUFFIX.pdfFieldName)] = if (efc.hasHSuffix) "1" else "0"
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.RECEIVED_DATE.pdfFieldName)] = getDate(text, applicationReceiptPrefix)
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.PROCESSED_DATE.pdfFieldName)] = getDate(text, processedPrefix)
-        parsedValues[PdfNormalizer.normalizeField(CsvHeaders.Fields.YEAR.pdfFieldName)] = getYear(text)
+        parsedValues[CsvHeaders.Fields.EFC_NUMBER] = efc.number ?: ""
+        parsedValues[CsvHeaders.Fields.IS_EFC_STARRED] = if (efc.isStarred) "1" else "0"
+        parsedValues[CsvHeaders.Fields.HAS_EFC_C_SUFFIX] = if (efc.hasCSuffix) "1" else "0"
+        parsedValues[CsvHeaders.Fields.HAS_EFC_H_SUFFIX] = if (efc.hasHSuffix) "1" else "0"
+        parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = getDate(text, applicationReceiptPrefix)
+        parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = getDate(text, processedPrefix)
+        parsedValues[CsvHeaders.Fields.YEAR] = getYear(text)
     }
 
     fun getDate(pdfContent: String, prefixString: String): String {
@@ -80,15 +80,16 @@ class PdfParser {
         return PdfNormalizer.normalizeValue(yearMatch ?: throw RuntimeException("Failed to find SAR year in PDF"))
     }
 
-    private fun parseTableFields(text: String, parsedValues: MutableMap<String, String>) {
+    private fun parseTableFields(text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
         val regex = Regex("""^\s*\d+\S?\.(.*)[:\?](.*)${'$'}""", RegexOption.MULTILINE)
         val matchResults = regex.findAll(text)
         for (matchResult in matchResults) {
             val groups = matchResult.groups
             if (groups.size == 3) {
-                val label = groups[1]!!.value.trim()
+                val label = PdfNormalizer.normalizeField(groups[1]!!.value.trim())
+                val field = CsvHeaders.fieldsByNormalizedPdfName[label] ?: continue
                 val response = groups[2]!!.value.trim()
-                parsedValues[PdfNormalizer.normalizeField(label)] = response
+                parsedValues[field] = response
             }
         }
     }
@@ -98,13 +99,12 @@ class PdfParser {
         return stripper.getText(document)
     }
 
-    private fun mapToCSVMap(m: HashMap<String, String>): HashMap<String, String> {
+    private fun mapToCSVMap(m: HashMap<CsvHeaders.Fields, String>): HashMap<String, String> {
         val csvMap = HashMap<String, String>()
         for (header in CsvHeaders.Fields.values()) {
-            val normalizedFieldName = PdfNormalizer.normalizeField(header.pdfFieldName)
-            val fieldValue = m[normalizedFieldName]
+            val fieldValue = m[header]
             if (fieldValue != null) {
-                csvMap[normalizedFieldName] = PdfNormalizer.normalizeValue(fieldValue)
+                csvMap[PdfNormalizer.normalizeField(header.csvFieldName)] = PdfNormalizer.normalizeValue(fieldValue)
             }
         }
 

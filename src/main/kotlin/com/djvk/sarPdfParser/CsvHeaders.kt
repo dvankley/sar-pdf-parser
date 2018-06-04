@@ -36,6 +36,8 @@ object CsvHeaders {
         FILENAME(DocType.ALL, "Filename", "Filename");
     }
 
+    val fieldsByNormalizedPdfName = Fields.values().associateBy { PdfNormalizer.normalizeField(it.pdfFieldName) }
+
     enum class DocType {
         SAR, ERROR, ALL
     }
