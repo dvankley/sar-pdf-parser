@@ -81,7 +81,8 @@ class PdfParser {
     }
 
     private fun parseTableFields(text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
-        val regex = Regex("""^\s*\d+\S?\.(.*)[:\?](.*)${'$'}""", RegexOption.MULTILINE)
+        val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
+        val regex = Regex("""^[$spaces]*\d+\S?\.(.+?)[:?]([$spaces\w].+?)${'$'}""", setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
         val matchResults = regex.findAll(text)
         for (matchResult in matchResults) {
             val groups = matchResult.groups
