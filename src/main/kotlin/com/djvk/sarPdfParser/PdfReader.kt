@@ -11,15 +11,16 @@ class PdfReader(private val files: Array<File>) {
         val errorCsvWriter = CsvWriter("errors.csv", CsvHeaders.DocType.ERROR)
         val context = CommonPool
         val jerbs: MutableList<Pair<String, Deferred<Map<String, String>>>> = ArrayList()
-        files.forEach({ file ->
-                jerbs.add(Pair(file.name, async(context, CoroutineStart.DEFAULT, {
-                    parser.processFile(file)
-                })))
-        })
-        jerbs.forEach({ (fileName, jerb) ->
+        files.forEach { file ->
+            jerbs.add(Pair(file.name, async(context, CoroutineStart.DEFAULT, {
+                parser.processFile(file)
+            })))
+        }
+        jerbs.forEach { (fileName, jerb) ->
             runBlocking {
                 try {
-                    val output = jerb.await()
+                    val output = jerb.await().toMutableMap()
+                    output[CsvHeaders.Fields.FILENAME.csvFieldName] = fileName
                     primaryCsvWriter.insertRow(output)
                 } catch (e: Exception) {
                     println("Error processing file $fileName ${e.dump()}")
@@ -29,7 +30,7 @@ class PdfReader(private val files: Array<File>) {
                     ))
                 }
             }
-        })
+        }
         errorCsvWriter.finish()
         primaryCsvWriter.finish()
     }
