@@ -109,11 +109,39 @@ class PdfParser {
         }
     }
 
+    enum class ResponseValues(val outputValue: String) {
+        EMPTY(""),
+        YES("YES"),
+        NO("NO");
+
+        companion object {
+            fun fromString(inputValue: String?): ResponseValues {
+                if (inputValue == null) return EMPTY
+                return try {
+                    valueOf(inputValue.toUpperCase().trim())
+                } catch (e: IllegalArgumentException) {
+                    EMPTY
+                }
+            }
+        }
+    }
+
     private fun getFieldValue(field: CsvHeaders.Fields, rawValue: String, parsedValues: Map<CsvHeaders.Fields, String>): String {
         if (field == CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH) {
-            val newBooleanValue = rawValue.toLowerCase().trim() == "yes"
-            val oldBooleanValue = parsedValues[CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH]?.toLowerCase()?.trim() == "yes"
-            return if (newBooleanValue || oldBooleanValue) "YES" else "NO"
+            val newResponse = ResponseValues.fromString(rawValue)
+            val oldResponseString = parsedValues[CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH]?.toUpperCase()?.trim()
+            val oldResponse = ResponseValues.fromString(oldResponseString)
+
+            // YES takes precedence
+            return if (newResponse == ResponseValues.YES || oldResponse == ResponseValues.YES) {
+                ResponseValues.YES.outputValue
+            } else if (newResponse == ResponseValues.NO || oldResponse == ResponseValues.NO) {
+                // If no YES but there are any NOs, let's call it NO
+                ResponseValues.NO.outputValue
+            } else {
+                // If no YES or NO, call it EMPTY
+                ResponseValues.EMPTY.outputValue
+            }
         }
         return rawValue
     }
