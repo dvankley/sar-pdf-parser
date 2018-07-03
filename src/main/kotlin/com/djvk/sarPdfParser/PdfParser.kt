@@ -87,9 +87,23 @@ class PdfParser {
         for (matchResult in matchResults) {
             val groups = matchResult.groups
             if (groups.size == 3) {
-                val label = PdfNormalizer.normalizeField(groups[1]!!.value.trim())
-                val field = CsvHeaders.fieldsByNormalizedPdfName[label] ?: continue
-                val response = groups[2]!!.value.trim()
+                val rawLabel = groups[1]!!.value.trim()
+                // Check if YES/NO response is interleaved in label because life is suffering
+                val labelRegex = Regex("""[$spaces](NO|YES)[$spaces]""")
+                val valueInLabelMatch = labelRegex.find(rawLabel)
+                val valueInLabel = valueInLabelMatch?.groups?.get(1)?.value
+                val fieldString: String
+                val response: String
+                // If YES/NO response is not interleaved in label
+                if (valueInLabel == null) {
+                    fieldString = rawLabel
+                    response = groups[2]!!.value.trim()
+                } else {
+                    // Otherwise response is interleaved in label and we need to pull it out
+                    fieldString = rawLabel.replace(valueInLabel, "")
+                    response = valueInLabel
+                }
+                val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
                 parsedValues[field] = getFieldValue(field, response, parsedValues)
             }
         }
