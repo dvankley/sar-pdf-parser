@@ -85,27 +85,27 @@ class PdfParser {
         val regex = Regex("""^[$spaces]*\d+\S?\.(.+?)[:?]([$spaces\w].+?)${'$'}""", setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
         val matchResults = regex.findAll(text)
         for (matchResult in matchResults) {
-            val groups = matchResult.groups
-            if (groups.size == 3) {
-                val rawLabel = groups[1]!!.value.trim()
-                // Check if YES/NO response is interleaved in label because life is suffering
-                val labelRegex = Regex("""[$spaces](NO|YES)[$spaces]""")
-                val valueInLabelMatch = labelRegex.find(rawLabel)
-                val valueInLabel = valueInLabelMatch?.groups?.get(1)?.value
-                val fieldString: String
-                val response: String
-                // If YES/NO response is not interleaved in label
-                if (valueInLabel == null) {
-                    fieldString = rawLabel
-                    response = groups[2]!!.value.trim()
-                } else {
-                    // Otherwise response is interleaved in label and we need to pull it out
-                    fieldString = rawLabel.replace(valueInLabel, "")
-                    response = valueInLabel
-                }
-                val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
-                parsedValues[field] = getFieldValue(field, response, parsedValues)
-            }
+            if (matchResult.groups.size != 3) continue
+
+            val (fieldString, response) = getFieldAndResponse(matchResult)
+            val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
+            parsedValues[field] = getFieldValue(field, response, parsedValues)
+        }
+    }
+
+    private fun getFieldAndResponse(matchResult: MatchResult): Pair<String, String> {
+        val groups = matchResult.groups
+        val rawLabel = groups[1]!!.value.trim()
+        // Check if YES/NO response is interleaved in label because life is suffering
+        val labelRegex = Regex("""[$spaces](NO|YES)[$spaces]""")
+        val valueInLabelMatch = labelRegex.find(rawLabel)
+        val valueInLabel = valueInLabelMatch?.groups?.get(1)?.value
+        // If YES/NO response is not interleaved in label
+        return if (valueInLabel == null) {
+            Pair(rawLabel, groups[2]!!.value.trim())
+        } else {
+            // Otherwise response is interleaved in label and we need to pull it out
+            Pair(rawLabel.replace(valueInLabel, ""), valueInLabel)
         }
     }
 
