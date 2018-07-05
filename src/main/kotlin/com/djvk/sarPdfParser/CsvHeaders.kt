@@ -1,21 +1,29 @@
 package com.djvk.sarPdfParser
 
 object CsvHeaders {
-    val fieldsByNormalizedPdfName = Fields.values().associateBy { PdfNormalizer.normalizeField(it.pdfFieldName) }.toMutableMap()
+    val fieldsByNormalizedPdfName = Fields.values()
+            .filter {it.pdfTableFieldName != null}
+            .associateBy { PdfNormalizer.normalizeField(it.pdfTableFieldName!!) }
+            .toMutableMap()
 
     init {
         fieldsByNormalizedPdfName[PdfNormalizer.normalizeField("Is Student an Unaccompanied Homeless Youth as Determined by HUD")] = Fields.UNACCOMPANIED_HOMELESS_YOUTH
         fieldsByNormalizedPdfName[PdfNormalizer.normalizeField("Is Student an Unaccompanied Homeless Youth as Determined by High School/Homeless Liaison")] = Fields.UNACCOMPANIED_HOMELESS_YOUTH
     }
 
-    enum class Fields(val docType: DocType, val csvFieldName: String, val pdfFieldName: String) {
-        EFC_NUMBER(DocType.SAR, "EFC Number", "EFC Number"),
-        IS_EFC_STARRED(DocType.SAR, "Is EFC Starred", "Is EFC Starred"),
-        HAS_EFC_C_SUFFIX(DocType.SAR, "Has EFC C Suffix", "Has EFC C Suffix"),
-        HAS_EFC_H_SUFFIX(DocType.SAR, "Has EFC H Suffix", "Has EFC H Suffix"),
-        RECEIVED_DATE(DocType.SAR, "Received Date", "Received Date"),
-        PROCESSED_DATE(DocType.SAR, "Processed Date", "Processed Date"),
-        YEAR(DocType.SAR, "Year", "Year"),
+    /**
+     * @property docType Document type this field applies to
+     * @property csvFieldName Name of CSV column this field is output to
+     * @property pdfTableFieldName The string to match against the table field name in the PDF file. Null if this field isn't a PDF table field.
+     */
+    enum class Fields(val docType: DocType, val csvFieldName: String, val pdfTableFieldName: String? = null) {
+        EFC_NUMBER(DocType.SAR, "EFC Number"),
+        IS_EFC_STARRED(DocType.SAR, "Is EFC Starred"),
+        HAS_EFC_C_SUFFIX(DocType.SAR, "Has EFC C Suffix"),
+        HAS_EFC_H_SUFFIX(DocType.SAR, "Has EFC H Suffix"),
+        RECEIVED_DATE(DocType.SAR, "Received Date"),
+        PROCESSED_DATE(DocType.SAR, "Processed Date"),
+        YEAR(DocType.SAR, "Year"),
         STUDENT_FIRST_NAME(DocType.SAR, "Student First Name", "Student’s  First  Name"),
         STUDENT_MIDDLE_NAME(DocType.SAR, "Student Middle Name", "Student’s  Middle  Initial"),
         STUDENT_LAST_NAME(DocType.SAR, "Student Last Name", "Student’s  Last  Name"),
@@ -37,10 +45,11 @@ object CsvHeaders {
         PARENTS_RECEIVED_TANF(DocType.SAR, "Parents received TANF", "Parents  Received  TANF"),
         STUDENT_RECEIVED_SNAP(DocType.SAR, "Student received SNAP", "Student  Received  SNAP"),
         STUDENT_RECEIVED_TANF(DocType.SAR, "Student received TANF", "Student  Received  TANF"),
+        FIELDS_TO_REVIEW(DocType.SAR, "Fields to Review"),
 
-        ERROR(DocType.ERROR, "Error", "Error"),
+        ERROR(DocType.ERROR, "Error"),
 
-        FILENAME(DocType.ALL, "Filename", "Filename");
+        FILENAME(DocType.ALL, "Filename");
     }
 
     enum class DocType {

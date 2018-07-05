@@ -91,6 +91,12 @@ class PdfParser {
             val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
             parsedValues[field] = getFieldValue(field, response, parsedValues)
         }
+        // Subtract the table fields we've found values for from all possible table fields
+        val fieldsToReview = CsvHeaders.Fields.values()
+                .filter { it.pdfTableFieldName != null }
+                .minus(parsedValues.keys)
+
+        parsedValues[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
     }
 
     private fun getFieldAndResponse(matchResult: MatchResult): Pair<String, String> {
