@@ -84,17 +84,20 @@ class PdfParser {
         val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
         val regex = Regex("""^[$spaces]*\d+\S?[.,](.+?)[:?]([$spaces\w].+?)${'$'}""", setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
         val matchResults = regex.findAll(text)
+        val fieldsFound = HashSet<CsvHeaders.Fields>()
+
         for (matchResult in matchResults) {
             if (matchResult.groups.size != 3) continue
 
             val (fieldString, response) = getFieldAndResponse(matchResult)
             val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
+            fieldsFound.add(field)
             parsedValues[field] = getFieldValue(field, response, parsedValues)
         }
-        // Subtract the table fields we've found values for from all possible table fields
+        // Subtract the table fields we've found from all possible table fields
         val fieldsToReview = CsvHeaders.Fields.values()
                 .filter { it.pdfTableFieldName != null }
-                .minus(parsedValues.keys)
+                .minus(fieldsFound)
 
         parsedValues[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
     }
