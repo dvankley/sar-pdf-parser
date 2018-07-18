@@ -11,6 +11,7 @@ object PdfNormalizer {
                 // So we have to get smarter about the context the years might appear in
                 // Parent1 and Parent2 are valid non-year strings, all other digit strings starting with 4 are dates
                 .replace("""(?<!Parent)20?\d?\d?""".toRegex(), "|normalizedYear|")
+                .toLowerCase()
     }
 
     fun normalizeValue(value: String): String {
