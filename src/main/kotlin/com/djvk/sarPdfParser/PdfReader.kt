@@ -20,7 +20,7 @@ class PdfReader(private val files: Array<File>) {
             runBlocking {
                 try {
                     val output = jerb.await().toMutableMap()
-                    output[CsvHeaders.Fields.FILENAME.csvFieldName] = fileName
+                    output[PdfNormalizer.normalizeField(CsvHeaders.Fields.FILENAME.csvFieldName)] = fileName
                     primaryCsvWriter.insertRow(output)
                 } catch (e: Exception) {
                     println("Error processing file $fileName ${e.dump()}")
