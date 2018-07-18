@@ -11,6 +11,9 @@ object CsvHeaders {
         fieldsByNormalizedPdfName[PdfNormalizer.normalizeField("Is Student an Unaccompanied Homeless Youth as Determined by High School/Homeless Liaison")] = Fields.UNACCOMPANIED_HOMELESS_YOUTH
     }
 
+    // Files without First Name, Last Name, DOB, and SSN should be logged as an error
+    val requiredTableFields = listOf(Fields.STUDENT_FIRST_NAME, Fields.STUDENT_LAST_NAME, Fields.STUDENT_DOB, Fields.STUDENT_SSN_L4)
+
     /**
      * @property docType Document type this field applies to
      * @property csvFieldName Name of CSV column this field is output to

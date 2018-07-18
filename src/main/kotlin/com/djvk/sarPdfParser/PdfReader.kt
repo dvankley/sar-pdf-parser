@@ -25,8 +25,8 @@ class PdfReader(private val files: Array<File>) {
                 } catch (e: Exception) {
                     println("Error processing file $fileName ${e.dump()}")
                     errorCsvWriter.insertRow(mapOf(
-                            CsvHeaders.Fields.FILENAME.csvFieldName to fileName,
-                            CsvHeaders.Fields.ERROR.csvFieldName to e.localizedMessage
+                            PdfNormalizer.normalizeField(CsvHeaders.Fields.FILENAME.csvFieldName) to fileName,
+                            PdfNormalizer.normalizeField(CsvHeaders.Fields.ERROR.csvFieldName) to e.localizedMessage
                     ))
                 }
             }

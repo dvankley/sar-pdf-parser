@@ -8,7 +8,7 @@ class PdfNormalizerTest {
     fun normalizeField_punctuation() {
         val pdfField = "Parent  2  (Father’s/Mother’s/Stepparent’s)    Social  Security  Number"
         val actual = PdfNormalizer.normalizeField(pdfField)
-        val expected = "Parent2FathersMothersStepparentsSocialSecurityNumber"
+        val expected = "parent2fathersmothersstepparentssocialsecuritynumber"
         assertThat(actual).isEqualTo(expected)
     }
 
@@ -16,7 +16,7 @@ class PdfNormalizerTest {
     fun normalizeField_year() {
         val pdfField = "Student's  2015  Adjusted Gross  Income"
         val actual = PdfNormalizer.normalizeField(pdfField)
-        val expected = "Students|normalizedYear|AdjustedGrossIncome"
+        val expected = "students|normalizedyear|adjustedgrossincome"
         assertThat(actual).isEqualTo(expected)
     }
 
@@ -24,7 +24,7 @@ class PdfNormalizerTest {
     fun normalizeField_mangledYear() {
         val pdfField = "Spouse's  20   Income Earned from  Work"
         val actual = PdfNormalizer.normalizeField(pdfField)
-        val expected = "Spouses|normalizedYear|IncomeEarnedfromWork"
+        val expected = "spouses|normalizedyear|incomeearnedfromwork"
         assertThat(actual).isEqualTo(expected)
     }
 
@@ -32,7 +32,7 @@ class PdfNormalizerTest {
     fun normalizeField_moreFunWithYears() {
         val pdfField = "Working  on  Master’s or  Doctorate  in  2017-2018"
         val actual = PdfNormalizer.normalizeField(pdfField)
-        val expected = "WorkingonMastersorDoctoratein|normalizedYear||normalizedYear|"
+        val expected = "workingonmastersordoctoratein|normalizedyear||normalizedyear|"
         assertThat(actual).isEqualTo(expected)
     }
 

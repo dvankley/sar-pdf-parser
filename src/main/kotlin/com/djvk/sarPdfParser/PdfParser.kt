@@ -94,6 +94,15 @@ class PdfParser {
             fieldsFound.add(field)
             parsedValues[field] = getFieldValue(field, response, parsedValues)
         }
+
+        val allRequiredFieldsFilled = CsvHeaders.requiredTableFields.all {requiredField ->
+            val value = parsedValues[requiredField] ?: return@all false
+            value.isNotBlank()
+        }
+        if (!allRequiredFieldsFilled) {
+            throw Exception("File did not contain student's first name, last name, DOB, and last 4 of SSN")
+        }
+
         // Subtract the table fields we've found from all possible table fields
         val fieldsToReview = CsvHeaders.Fields.values()
                 .filter { it.pdfTableFieldName != null }
