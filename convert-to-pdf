@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# export TESSDATA_PREFIX=/tessdata_best
+
+find /images/* \( -name "*.png" -o -name "*.jpeg" \) | while read f; do
+  echo "$f"
+  convert "$f" -scale '300%' -units pixelsperinch -density 300 -depth 8 -type Grayscale "${f//.png/.tif}"
+  tesseract --oem 1 --dpi 300 -l eng "${f//.png/.tif}" "${f//.png/}" pdf >/dev/null 2>&1
+  echo "${f//.png/.pdf}"
+  echo
+  echo '-------------------'
+  echo
+done
