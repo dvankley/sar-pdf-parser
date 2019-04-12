@@ -2,7 +2,7 @@ package com.djvk.sarPdfParser
 
 import java.util.*
 
-class Transcript(val filename: String, val name: String, val id: String, val dob: Date) {
+class Transcript(val filename: String, val name: String?, val id: String?, val dob: String?) {
     private var terms: MutableList<Term> = ArrayList()
 
     class Course(val subject: String, val number: String, val campus: String, val title: String, val grade: String, val creditHours: Float, val qualityPoints: Float)

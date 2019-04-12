@@ -3,6 +3,7 @@ package com.djvk.sarPdfParser
 import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
+import java.util.*
 
 class TranscriptPdfParser {
     private val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
@@ -25,8 +26,10 @@ class TranscriptPdfParser {
             try {
                 val id = getId(text)
                 val name = getName(text)
+                val dob = getBirthday(text)
 
                 val programs = parseCurrentProgram(text)
+                val transcript: Transcript = Transcript(file.name, name, id, dob)
                 System.out.println(text)
             } catch (e: Exception) {
                 throw FileProcessingException(file.name, e)
@@ -49,6 +52,12 @@ class TranscriptPdfParser {
     private fun getName(text: String): String? {
         val regex = """(\d{9})(.*)Display""".toRegex(RegexOption.DOT_MATCHES_ALL)
         return regex.find(text, 0)?.groupValues?.get(2)?.trim()
+    }
+
+    private fun getBirthday(text: String): String? {
+        val regex = """Birth Date:(.*)""".toRegex()
+        val dateStr = regex.find(text, 0)?.groupValues?.get(1)?.trim()
+        return dateStr
     }
 
     private fun parseCurrentProgram(text: String): List<String>? {
