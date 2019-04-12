@@ -10,8 +10,8 @@ A working knowledge of Kotlin is recommended. It's basically Java with better sy
 - Clone the repo
 - Ensure `mvn test` is successful
 - `mvn package`
-- Run the jar with `java -jar target/sar-pdf-parser-1.0-SNAPSHOT.jar`
-	- Add any CLI arguments you have to the end of the above command
+- Run the jar with `java -jar target/sar-pdf-parser-1.0-SNAPSHOT.jar -d <directory>`
+	- `<directory>` should be a folder containing the PDFs to parse
 - (non)profit
 
 ## Development
