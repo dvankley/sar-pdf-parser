@@ -25,6 +25,8 @@ class TranscriptPdfParser {
             try {
                 val id = getId(text)
                 val name = getName(text)
+                val college = getCollege(text)
+                val major = getMajor(text)
                 System.out.println(text)
             } catch (e: Exception) {
                 throw FileProcessingException(file.name, e)
@@ -42,6 +44,16 @@ class TranscriptPdfParser {
     private fun getName(text: String): String? {
         val regex = """(\d{9})(.*)Display""".toRegex(RegexOption.DOT_MATCHES_ALL)
         return regex.find(text, 0)?.groupValues?.get(2)?.trim()
+    }
+
+    private fun getCollege(text: String): String? {
+        val regex = """College:(.*)""".toRegex()
+        return regex.find(text, 0)?.groupValues?.get(1)?.trim()
+    }
+
+    private fun getMajor(text: String): String? {
+        val regex = """Major:(.*)""".toRegex()
+        return regex.find(text, 0)?.groupValues?.get(1)?.trim()
     }
 
     private fun getLayoutText(document: PDDocument): String {
