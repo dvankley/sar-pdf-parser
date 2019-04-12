@@ -2,6 +2,7 @@ package com.djvk.sarPdfParser
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.apache.commons.text.StringEscapeUtils
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -12,7 +13,7 @@ class CsvWriter(outFile: String, val docType: CsvHeaders.DocType) {
     init {
         val writer = Files.newBufferedWriter(Paths.get(outFile))
         val headers = getHeaders(docType)
-                .map { it.csvFieldName }
+                .map { StringEscapeUtils.escapeCsv(it.csvFieldName) }
                 .toTypedArray()
         csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader( *headers))
     }
@@ -24,6 +25,9 @@ class CsvWriter(outFile: String, val docType: CsvHeaders.DocType) {
 
     fun insertRow(row: Map<String,String>){
         val list = getRowValuesInOrder(row)
+        list.map {
+            StringEscapeUtils.escapeCsv(it)
+        }
         csvPrinter.printRecord(list)
     }
 
@@ -34,7 +38,7 @@ class CsvWriter(outFile: String, val docType: CsvHeaders.DocType) {
     }
 
     fun finish(){
-        csvPrinter.flush();
+        csvPrinter.flush()
     }
 
     private fun getRowValuesInOrder(row: Map<String,String>): MutableList<String> {
