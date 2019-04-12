@@ -4,7 +4,7 @@ import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
 
-class PdfParser {
+class SarPdfParser {
     private val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
     val applicationReceiptPrefix = """Application[$spaces]*Receipt"""
     val processedPrefix = """Processed"""

@@ -6,7 +6,7 @@ import java.io.File
 
 class PdfReader(private val files: Array<File>) {
     fun startProcessing() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val primaryCsvWriter = CsvWriter("outfile.csv", CsvHeaders.DocType.SAR)
         val errorCsvWriter = CsvWriter("errors.csv", CsvHeaders.DocType.ERROR)
         val context = CommonPool

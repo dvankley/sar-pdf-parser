@@ -188,7 +188,7 @@ class PdfParsingTest {
     @Test
     fun base() {
         val file = File("src/test/resources/testInput/sample-2016.pdf")
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         var fileContents = runBlocking {
             parser.processFile(file)
         }
@@ -201,7 +201,7 @@ class PdfParsingTest {
 
     @Test
     fun testGetYear1() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val year = parser.getYear(testHeader1)
 
         assertThat(year).isEqualTo("2016-2017")
@@ -209,7 +209,7 @@ class PdfParsingTest {
 
     @Test
     fun testGetYear2() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val year = parser.getYear(testHeader2)
 
         assertThat(year).isEqualTo("2018-2019")
@@ -217,7 +217,7 @@ class PdfParsingTest {
 
     @Test
     fun testGetEfc1() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val result = parser.getEFCNumber(testHeader1)
 
         assertThat(result.number).isEqualTo("123456")
@@ -228,7 +228,7 @@ class PdfParsingTest {
 
     @Test
     fun testGetEfc2() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val result = parser.getEFCNumber(testHeader2)
 
         assertThat(result.number).isEqualTo("888888")
@@ -239,7 +239,7 @@ class PdfParsingTest {
 
     @Test
     fun testGetDate1() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val receipt = parser.getDate(testHeader1, parser.applicationReceiptPrefix)
         val processed = parser.getDate(testHeader1, parser.processedPrefix)
 
@@ -249,7 +249,7 @@ class PdfParsingTest {
 
     @Test
     fun testGetDate2() {
-        val parser = PdfParser()
+        val parser = SarPdfParser()
         val receipt = parser.getDate(testHeader2, parser.applicationReceiptPrefix)
         val processed = parser.getDate(testHeader2, parser.processedPrefix)
 
