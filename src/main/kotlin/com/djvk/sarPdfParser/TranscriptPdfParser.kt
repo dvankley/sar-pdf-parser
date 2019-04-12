@@ -36,6 +36,11 @@ class TranscriptPdfParser {
         }
     }
 
+    private fun parseTerms(text: String): MatchResult? {
+        val regex = """(Term:.*?[\n\r]\s*College:.*?Cumulative:.*?${'$'})""".toRegex(setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE))
+        return regex.find(text, 0)
+    }
+
     private fun getId(text: String): String? {
         val regex = """(\d{9})(.*)Display""".toRegex(RegexOption.DOT_MATCHES_ALL)
         return regex.find(text, 0)?.groupValues?.get(1)
