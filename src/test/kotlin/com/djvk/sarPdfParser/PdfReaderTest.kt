@@ -1,11 +1,10 @@
 package com.djvk.sarPdfParser
 
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.File
-import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
 import java.io.FileReader
 import java.io.BufferedReader
 import kotlin.test.assertEquals

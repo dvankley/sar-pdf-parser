@@ -1,20 +1,21 @@
 package com.djvk.sarPdfParser
 
 import com.djvk.sarPdfParser.exceptions.dump
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import java.io.File
+import kotlin.coroutines.EmptyCoroutineContext
 
 class PdfReader(private val files: Array<File>) {
     fun startProcessing() {
         val parser = SarPdfParser()
         val primaryCsvWriter = CsvWriter("outfile.csv", CsvHeaders.DocType.SAR)
         val errorCsvWriter = CsvWriter("errors.csv", CsvHeaders.DocType.ERROR)
-        val context = CommonPool
+        val scope = CoroutineScope(EmptyCoroutineContext)
         val jerbs: MutableList<Pair<String, Deferred<Map<String, String>>>> = ArrayList()
         files.forEach { file ->
-            jerbs.add(Pair(file.name, async(context, CoroutineStart.DEFAULT, {
+            jerbs.add(Pair(file.name, scope.async(EmptyCoroutineContext, CoroutineStart.DEFAULT) {
                 parser.processFile(file)
-            })))
+            }))
         }
         jerbs.forEach { (fileName, jerb) ->
             runBlocking {
