@@ -7,6 +7,7 @@ import java.io.File
 import java.util.*
 
 class SarPdfParser {
+    private val dateRegex = """\d{2}/\d{2}/\d{4}"""
     private val dashes = PdfNormalizer.groupByAsciiForRegex('-')
     private val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
     val applicationReceiptPrefix = """Application[$spaces]*Receipt"""
@@ -38,10 +39,18 @@ class SarPdfParser {
     }
 
     fun getReportYears(text: String): Pair<Int, Int> {
-        val reportYearRegex =
+        val reportYearRegex1 =
             """(\d{4})[$spaces]*[$dashes][$spaces]*(\d{4})[$spaces]*(?:Electronic)?[$spaces]*Student[$spaces]*Aid[$spaces]*Report"""
                 .toRegex(RegexOption.IGNORE_CASE)
-        val reportYearMatch = reportYearRegex.find(text, 0)
+        var reportYearMatch = reportYearRegex1.find(text, 0)
+
+        // If the first regex didn't work, try again with an older format
+        if (reportYearMatch == null) {
+            val reportYearRegex2 =
+                """(\d{4})[$spaces]*[$dashes][$spaces]*(\d{4})[$spaces]*Free[$spaces]*Application[$spaces]*for[$spaces]*Federal[$spaces]*Student[$spaces]*Aid"""
+                    .toRegex(RegexOption.IGNORE_CASE)
+            reportYearMatch = reportYearRegex2.find(text, 0)
+        }
 
         return Pair(
             reportYearMatch?.groupValues?.get(1)?.toInt()
@@ -65,18 +74,46 @@ class SarPdfParser {
         parsedValues[CsvHeaders.Fields.IS_EFC_STARRED] = if (efc.isStarred) "1" else "0"
         parsedValues[CsvHeaders.Fields.HAS_EFC_C_SUFFIX] = if (efc.hasCSuffix) "1" else "0"
         parsedValues[CsvHeaders.Fields.HAS_EFC_H_SUFFIX] = if (efc.hasHSuffix) "1" else "0"
-        parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = getDate(text, applicationReceiptPrefix)
-        parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = getDate(text, processedPrefix)
+        when (format) {
+            SarFormat.BEFORE_2021 -> {
+                parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = getDate(text, applicationReceiptPrefix)
+                parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = getDate(text, processedPrefix)
+            }
+            SarFormat.AFTER_2022 -> {
+                val headerData = getHeaderTableDataAfter2022(text)
+                parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = headerData.receivedDate
+                parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = headerData.processedDate
+            }
+        }
         val (startYear, endYear) = getReportYears(text)
         parsedValues[CsvHeaders.Fields.YEAR] = "$startYear-$endYear"
     }
 
     fun getDate(pdfContent: String, prefixString: String): String {
-        val dateRegex = """\d{2}/\d{2}/\d{4}"""
         val regex = """$prefixString[$spaces]*Date:[$spaces]*($dateRegex)""".toRegex(RegexOption.IGNORE_CASE)
         val rawDate = regex.find(pdfContent, 0)
 
         return rawDate?.groupValues?.get(1) ?: throw RuntimeException("Failed to find $prefixString date")
+    }
+
+    data class HeaderTableDataAfter2022(
+        val receivedDate: String,
+        val processedDate: String,
+        val DRN: Int,
+    )
+
+    fun getHeaderTableDataAfter2022(pdfContent: String): HeaderTableDataAfter2022 {
+        val regex = ("""Application[$spaces]*Receipt[$spaces]*Date:[$spaces]*Processed[$spaces]*Date:[$spaces]*""" +
+                """Data[$spaces]*Release[$spaces]*Number[$spaces]*\(DRN\)[$spaces\s]*""" +
+                """($dateRegex)[$spaces]*($dateRegex)[$spaces]*(\d+)""")
+            .toRegex(RegexOption.IGNORE_CASE)
+        val matches = regex.find(pdfContent, 0)
+
+        return HeaderTableDataAfter2022(
+            matches?.groupValues?.get(1) ?: throw RuntimeException("Failed to find header table dates"),
+            matches.groupValues[2],
+            matches.groupValues[3].toInt(),
+        )
     }
 
     fun getEFCNumber(format: SarFormat, pdfContent: String): EfcData {
