@@ -1,5 +1,6 @@
 package com.djvk.sarPdfParser
 
+import com.djvk.sarPdfParser.constants.SarFormat
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
@@ -202,23 +203,25 @@ class PdfParsingTest {
     @Test
     fun testGetYear1() {
         val parser = SarPdfParser()
-        val year = parser.getYear(testHeader1)
+        val (startYear, endYear) = parser.getReportYears(testHeader1)
 
-        assertThat(year).isEqualTo("2016-2017")
+        assertThat(startYear).isEqualTo(2016)
+        assertThat(endYear).isEqualTo(2017)
     }
 
     @Test
     fun testGetYear2() {
         val parser = SarPdfParser()
-        val year = parser.getYear(testHeader2)
+        val (startYear, endYear) = parser.getReportYears(testHeader2)
 
-        assertThat(year).isEqualTo("2018-2019")
+        assertThat(startYear).isEqualTo(2018)
+        assertThat(endYear).isEqualTo(2019)
     }
 
     @Test
     fun testGetEfc1() {
         val parser = SarPdfParser()
-        val result = parser.getEFCNumber(testHeader1)
+        val result = parser.getEFCNumber(SarFormat.BEFORE_2021, testHeader1)
 
         assertThat(result.number).isEqualTo("123456")
         assertThat(result.isStarred).isEqualTo(false)
@@ -229,7 +232,7 @@ class PdfParsingTest {
     @Test
     fun testGetEfc2() {
         val parser = SarPdfParser()
-        val result = parser.getEFCNumber(testHeader2)
+        val result = parser.getEFCNumber(SarFormat.BEFORE_2021, testHeader2)
 
         assertThat(result.number).isEqualTo("888888")
         assertThat(result.isStarred).isEqualTo(true)
