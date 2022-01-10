@@ -269,7 +269,7 @@ class PdfParsingTest {
         assertThat(result.number).isEqualTo("9999")
         assertThat(result.isStarred).isEqualTo(true)
         assertThat(result.hasCSuffix).isEqualTo(false)
-        assertThat(result.hasHSuffix).isEqualTo(true)
+        assertThat(result.hasHSuffix).isEqualTo(false)
     }
 
     @Test

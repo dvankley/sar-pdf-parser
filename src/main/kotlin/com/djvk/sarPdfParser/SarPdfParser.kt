@@ -157,7 +157,7 @@ class SarPdfParser {
         for (matchResult in matchResults) {
             if (matchResult.groups.size != 3) continue
 
-            val (fieldString, response) = getFieldAndResponse(matchResult)
+            val (fieldString, response) = getFieldAndResponse(format, matchResult)
             val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
             fieldsFound.add(field)
             parsedValues[field] = getFieldValue(field, response, parsedValues)
@@ -173,17 +173,20 @@ class SarPdfParser {
 
         // Subtract the table fields we've found from all possible table fields
         val fieldsToReview = CsvHeaders.Fields.values()
-            .filter { it.pdfTableFieldName != null }
+            .filter { it.pdfTableFieldNames != null }
             .minus(fieldsFound)
 
         parsedValues[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
     }
 
-    private fun getFieldAndResponse(matchResult: MatchResult): Pair<String, String> {
+    private fun getFieldAndResponse(format: SarFormat, matchResult: MatchResult): Pair<String, String> {
         val groups = matchResult.groups
         val rawLabel = groups[1]!!.value.trim()
         // Check if YES/NO response is interleaved in label because life is suffering
-        val labelRegex = Regex("""[$spaces](NO|YES)[$spaces]""")
+        val labelRegex = when (format) {
+            SarFormat.BEFORE_2021 -> Regex("""[$spaces](NO|YES|)[$spaces]""")
+            SarFormat.AFTER_2022 -> Regex("""[\s$spaces](No|Yes)[\s$spaces]""")
+        }
         val valueInLabelMatch = labelRegex.find(rawLabel)
         val valueInLabel = valueInLabelMatch?.groups?.get(1)?.value
         // If YES/NO response is not interleaved in label
