@@ -163,6 +163,28 @@ object CsvHeaders {
                 "98. Did the student receive TANF",
             )
         ),
+        INTERESTED_IN_WORK_STUDY(
+            DocType.SAR, "Interested in Work Study", setOf(
+                "31. Is the student interested in Work-Study",
+            )
+        ),
+        STUDENT_RECEIVED_MEDICAID(
+            DocType.SAR, "Student received Medicaid", setOf(
+                "95. Did the student receive Medicaid",
+            ),
+        ),
+        PARENTS_RECEIVED_MEDICAID(
+            DocType.SAR, "Parents received Medicaid", setOf(
+                "74. Did the parent receive Medicaid",
+            ),
+        ),
+        STUDENT_RECEIVED_WIC(
+            DocType.SAR, "Student received WIC", setOf(
+                "99. Did the student receive WIC",
+            ),
+        ),
+
+        // These fields are not in the PDF, but are here to allow the program to give feedback to the user
         FIELDS_TO_REVIEW(DocType.SAR, "Fields to Review"),
 
         ERROR(DocType.ERROR, "Error"),
