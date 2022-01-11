@@ -11,6 +11,9 @@ src/test/resources/sars
 # Log file
 *.log
 
+# Any CSV files
+*.csv
+
 # Package Files #
 *.jar
 *.war
