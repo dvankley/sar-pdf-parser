@@ -10,7 +10,7 @@ class PdfReader(private val files: Array<File>) {
         val parser = SarPdfParser()
         val primaryCsvWriter = CsvWriter("outfile.csv", CsvHeaders.DocType.SAR)
         val errorCsvWriter = CsvWriter("errors.csv", CsvHeaders.DocType.ERROR)
-        val scope = CoroutineScope(EmptyCoroutineContext)
+        val scope = CoroutineScope(SupervisorJob())
         val jerbs: MutableList<Pair<String, Deferred<Map<String, String>>>> = ArrayList()
         files.forEach { file ->
             jerbs.add(Pair(file.name, scope.async(EmptyCoroutineContext, CoroutineStart.DEFAULT) {
