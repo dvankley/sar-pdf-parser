@@ -40,7 +40,7 @@ class SarPdfParser {
 
     fun getReportYears(text: String): Pair<Int, Int> {
         val reportYearRegex1 =
-            """(\d{4})[$spaces]*[$dashes][$spaces]*(\d{4})[$spaces]*(?:Electronic)?[$spaces]*Student[$spaces]*Aid[$spaces]*Report"""
+            """(\d{4})[$spaces\n]*[$dashes][$spaces\n]*(\d{2})[$spaces\n]*(?:Electronic)?[$spaces\n]*Student[$spaces\n]*Aid[$spaces\n]*Report"""
                 .toRegex(RegexOption.IGNORE_CASE)
         var reportYearMatch = reportYearRegex1.find(text, 0)
 
@@ -55,7 +55,8 @@ class SarPdfParser {
         return Pair(
             reportYearMatch?.groupValues?.get(1)?.toInt()
                 ?: throw RuntimeException("Failed to find SAR start year in PDF"),
-            reportYearMatch.groupValues[2].toInt(),
+            // This'll be a problem in 70 years!
+            reportYearMatch.groupValues[2].toInt() + 2000,
         )
     }
 
