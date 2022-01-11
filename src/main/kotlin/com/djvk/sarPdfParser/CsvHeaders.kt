@@ -35,22 +35,30 @@ object CsvHeaders {
         RECEIVED_DATE(DocType.SAR, "Received Date"),
         PROCESSED_DATE(DocType.SAR, "Processed Date"),
         YEAR(DocType.SAR, "Year"),
-        STUDENT_FIRST_NAME(DocType.SAR, "Student First Name", setOf(
-            "Student’s  First  Name",
-            "2. Student’s  First  Name",
-        )),
-        STUDENT_MIDDLE_NAME(DocType.SAR, "Student Middle Name", setOf(
-            "Student’s  Middle  Initial",
-            "3. Student’s  Middle  Initial",
-        )),
-        STUDENT_LAST_NAME(DocType.SAR, "Student Last Name", setOf(
-            "Student’s  Last  Name",
-            "1. Student’s  Last  Name",
-        )),
-        STUDENT_DOB(DocType.SAR, "Student Date of Birth", setOf(
-            "Student's  Date  of  Birth",
-            "9. Student's  Date  of  Birth",
-        )),
+        STUDENT_FIRST_NAME(
+            DocType.SAR, "Student First Name", setOf(
+                "Student’s  First  Name",
+                "2. Student’s  First  Name",
+            )
+        ),
+        STUDENT_MIDDLE_NAME(
+            DocType.SAR, "Student Middle Name", setOf(
+                "Student’s  Middle  Initial",
+                "3. Student’s  Middle  Initial",
+            )
+        ),
+        STUDENT_LAST_NAME(
+            DocType.SAR, "Student Last Name", setOf(
+                "Student’s  Last  Name",
+                "1. Student’s  Last  Name",
+            )
+        ),
+        STUDENT_DOB(
+            DocType.SAR, "Student Date of Birth", setOf(
+                "Student's  Date  of  Birth",
+                "9. Student's  Date  of  Birth",
+            )
+        ),
         STUDENT_SSN_L4(
             DocType.SAR,
             "Social Security Number Last 4 Digits",
@@ -59,14 +67,18 @@ object CsvHeaders {
                 "8. Student's  Social  Security  Number",
             )
         ),
-        PARENT_1_ED_LEVEL(DocType.SAR, "Parent 1 Educational Level", setOf(
-            "Parent  1  Educational  Level",
-            "24. Parent  1  Educational  Level",
-        )),
-        PARENT_2_ED_LEVEL(DocType.SAR, "Parent 2 Educational Level", setOf(
-            "Parent  2  Educational  Level",
-            "25. Parent  2  Educational  Level",
-        )),
+        PARENT_1_ED_LEVEL(
+            DocType.SAR, "Parent 1 Educational Level", setOf(
+                "Parent  1  Educational  Level",
+                "24. Parent  1  Educational  Level",
+            )
+        ),
+        PARENT_2_ED_LEVEL(
+            DocType.SAR, "Parent 2 Educational Level", setOf(
+                "Parent  2  Educational  Level",
+                "25. Parent  2  Educational  Level",
+            )
+        ),
 
         // Note the explicit years in these fields. They'll be specifically targeted in the field normalizing process.
         STUDENT_GROSS_INCOME(
@@ -85,10 +97,12 @@ object CsvHeaders {
                 "84. 2015  Adjusted Gross  Income",
             )
         ),
-        CHILD_SUPPORT_PAID(DocType.SAR, "Child Support Paid", setOf(
-            "Student's  Child  Support Paid",
-            "Student's  Child  Support Paid",
-        )),
+        CHILD_SUPPORT_PAID(
+            DocType.SAR, "Child Support Paid", setOf(
+                "Student's  Child  Support Paid",
+                "Student's  Child  Support Paid",
+            )
+        ),
         STUDENT_HAS_CHILDREN(
             DocType.SAR,
             "Does student have children they support?",
@@ -169,20 +183,37 @@ object CsvHeaders {
             )
         ),
         STUDENT_RECEIVED_MEDICAID(
-            DocType.SAR, "Student received Medicaid", setOf(
+            DocType.SAR, "Student received Medicaid",
+            setOf(
                 "95. Did the student receive Medicaid",
             ),
         ),
         PARENTS_RECEIVED_MEDICAID(
-            DocType.SAR, "Parents received Medicaid", setOf(
+            DocType.SAR, "Parents received Medicaid",
+            setOf(
                 "74. Did the parent receive Medicaid",
             ),
         ),
         STUDENT_RECEIVED_WIC(
-            DocType.SAR, "Student received WIC", setOf(
+            DocType.SAR, "Student received WIC",
+            setOf(
                 "99. Did the student receive WIC",
             ),
         ),
+        SUBSIDIZED_LOANS_BALANCE(DocType.SAR, "Subsidized loans balance"),
+        SUBSIDIZED_LOANS_REMAINING(DocType.SAR, "Subsidized loans remaining"),
+        SUBSIDIZED_LOANS_TOTAL(DocType.SAR, "Subsidized loans total"),
+        UNSUBSIDIZED_LOANS_BALANCE(DocType.SAR, "Unsubsidized loans balance"),
+        UNSUBSIDIZED_LOANS_REMAINING(DocType.SAR, "Unsubsidized loans remaining"),
+        UNSUBSIDIZED_LOANS_TOTAL(DocType.SAR, "Unsubsidized loans total"),
+        COMBINED_LOANS_BALANCE(DocType.SAR, "Combined loans balance"),
+        COMBINED_LOANS_REMAINING(DocType.SAR, "Combined loans remaining"),
+        COMBINED_LOANS_TOTAL(DocType.SAR, "Combined loans total"),
+        UNALLOCATED_LOANS_BALANCE(DocType.SAR, "Unallocated loans balance"),
+        UNALLOCATED_LOANS_REMAINING(DocType.SAR, "Unallocated loans remaining"),
+        UNALLOCATED_LOANS_TOTAL(DocType.SAR, "Unallocated loans total"),
+        PERKINS_LOAN_BALANCE(DocType.SAR, "Perkins loan balance"),
+        PERKINS_LOAN_AMOUNT(DocType.SAR, "Perkins loan amount"),
 
         // These fields are not in the PDF, but are here to allow the program to give feedback to the user
         FIELDS_TO_REVIEW(DocType.SAR, "Fields to Review"),
@@ -190,6 +221,18 @@ object CsvHeaders {
         ERROR(DocType.ERROR, "Error"),
 
         FILENAME(DocType.ALL, "Filename");
+    }
+
+    enum class FfelLoanFields(
+        val pdfLabel: String,
+        val balanceField: Fields,
+        val remainingField: Fields,
+        val totalField: Fields,
+    ) {
+        SUBSIDIZED("Subsidized Loans", Fields.SUBSIDIZED_LOANS_BALANCE, Fields.SUBSIDIZED_LOANS_REMAINING, Fields.SUBSIDIZED_LOANS_TOTAL),
+        UNSUBSIDIZED("Unsubsidized Loans", Fields.UNSUBSIDIZED_LOANS_BALANCE, Fields.UNSUBSIDIZED_LOANS_REMAINING, Fields.UNSUBSIDIZED_LOANS_TOTAL),
+        COMBINED("Combined Loans", Fields.COMBINED_LOANS_BALANCE, Fields.COMBINED_LOANS_REMAINING, Fields.COMBINED_LOANS_TOTAL),
+        UNALLOCATED("Unallocated Consolidation Loans", Fields.UNALLOCATED_LOANS_BALANCE, Fields.UNALLOCATED_LOANS_REMAINING, Fields.UNALLOCATED_LOANS_TOTAL),
     }
 
     enum class DocType {

@@ -28,8 +28,11 @@ class SarPdfParser {
             val parsedValues = HashMap<CsvHeaders.Fields, String>()
             try {
                 val format = determineReportFormat(text)
+                if (format == SarFormat.AFTER_2022) {
+                    parseLoansTablesFields(text, parsedValues)
+                }
                 parseGlobalFields(format, text, parsedValues)
-                parseTableFields(format, text, parsedValues)
+                parseGeneralTableFields(format, text, parsedValues)
             } catch (e: Exception) {
                 throw FileProcessingException(file.name, e)
             }
@@ -146,7 +149,11 @@ class SarPdfParser {
         val hasHSuffix: Boolean
     )
 
-    private fun parseTableFields(format: SarFormat, text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
+    private fun parseGeneralTableFields(
+        format: SarFormat,
+        text: String,
+        parsedValues: MutableMap<CsvHeaders.Fields, String>
+    ) {
         val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
         val regex = when (format) {
             SarFormat.BEFORE_2021 -> Regex(
@@ -249,6 +256,100 @@ class SarPdfParser {
         }
         return rawValue
     }
+
+    fun parseLoansTablesFields(text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
+        val ffelHeaderRegex = Regex(
+            """^[$spaces\n]*FFEL[$spaces\n]*Program[$spaces\n]*Loans[$spaces\n]*and/or[$spaces\n]*Direct[$spaces\n]*Loans""",
+            setOf(RegexOption.MULTILINE)
+        )
+        val ffelHeaderMatch = ffelHeaderRegex.find(text, 0) ?: return
+
+        val perkinsHeaderRegex = Regex(
+            """^[$spaces\n]*Federal[$spaces\n]*Perkins[$spaces\n]*Loan[$spaces\n]*Amounts""",
+            setOf(RegexOption.MULTILINE)
+        )
+        val perkinsHeaderMatch = perkinsHeaderRegex.find(text, ffelHeaderMatch.range.last) ?: return
+
+        val teachHeaderRegex = Regex(
+            """^[$spaces\n]*TEACH[$spaces\n]*Grants[$spaces\n]*Converted[$spaces\n]*to[$spaces\n]*Direct[$spaces\n]*Unsubsidized[$spaces\n]*Loans""",
+            setOf(RegexOption.MULTILINE)
+        )
+        val teachHeaderMatch = teachHeaderRegex.find(text, perkinsHeaderMatch.range.last) ?: return
+
+        val ffelText = text.substring(ffelHeaderMatch.range.last + 1, perkinsHeaderMatch.range.first)
+        val perkinsText = text.substring(perkinsHeaderMatch.range.last + 1, teachHeaderMatch.range.first)
+
+        val ffelValueRegex = Regex(
+            """([${'$'}\d,]+|(?:N/A))""",
+            setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE)
+        )
+
+        // Iterate over each FFEL field and try to find its data in the search text
+        val labelMatches = findTableLabelPositions(ffelText, CsvHeaders.FfelLoanFields.values().map { it.pdfLabel })
+        val valueMatchSequences = findTableInterleavedValues(ffelText, ffelValueRegex, labelMatches)
+
+        valueMatchSequences.forEachIndexed { index, valueMatchSequence ->
+            val loanField = CsvHeaders.FfelLoanFields.values()[index]
+            val matches = valueMatchSequence.toList()
+            if (matches.size != 3) {
+                throw IllegalArgumentException("Expected 3 FFEL value matches, found ${matches.size}")
+            }
+            parsedValues[loanField.balanceField] = matches[0].groupValues[1]
+            parsedValues[loanField.remainingField] = matches[1].groupValues[1]
+            parsedValues[loanField.totalField] = matches[2].groupValues[1]
+        }
+
+    }
+
+    /**
+     * Finds the position of an ordered sequence of labels given in [labelLiterals] with [text].
+     * Each of [labelLiterals] will be split by whitespace and will still match even if there are non-matching
+     *  characters between. This is intended to more effectively parse interleaved values.
+     * This function is intended to be used with [findTableInterleavedValues]
+     */
+    fun findTableLabelPositions(text: String, labelLiterals: List<String>): List<MatchResult> {
+        val labelMatches = mutableListOf<MatchResult>()
+        for (label in labelLiterals) {
+            val searchStartIndex = if (labelMatches.isEmpty()) 0 else labelMatches.last().range.last + 1
+            labelMatches.add(label
+                .split(' ')
+                .joinToString(".+?")
+                // Build the label regex from the label literal string
+                .toRegex(setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
+                .find(text, searchStartIndex)
+                ?: throw IllegalArgumentException("Failed to find expected table label $label")
+            )
+        }
+        return labelMatches
+    }
+
+    /**
+     * This function is intended to be used with [findTableLabelPositions]
+     */
+    fun findTableInterleavedValues(
+        text: String,
+        valueRegex: Regex,
+        labelMatches: List<MatchResult>
+    ): List<Sequence<MatchResult>> {
+        val valueMatches = mutableListOf<Sequence<MatchResult>>()
+        labelMatches.forEachIndexed { index, matchResult ->
+            val searchText = if (index == labelMatches.size - 1) {
+                /** If this is the last label match, search from the start of this label to the end of [text] */
+                text.substring(matchResult.range.first)
+            } else {
+                /** If this is not the last label match, search from the start of this label to just before the start
+                 *  of the next label */
+                text.substring(matchResult.range.first, labelMatches[index + 1].range.first - 1)
+            }
+
+            valueMatches.add(valueRegex.findAll(searchText))
+        }
+        return valueMatches
+    }
+
+//    fun parsePerkinsLoansTableFields(text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
+//
+//    }
 
     private fun getLayoutText(document: PDDocument): String {
         val stripper = PDFLayoutTextStripper()
