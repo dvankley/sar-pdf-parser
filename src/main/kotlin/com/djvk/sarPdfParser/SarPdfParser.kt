@@ -147,10 +147,20 @@ class SarPdfParser {
 
     private fun parseTableFields(format: SarFormat, text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
         val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
-        val regex = Regex(
-            """^[$spaces]*\d+\S?[.,](.+?)[:?]([$spaces\w].+?)${'$'}""",
-            setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
-        )
+        val regex = when (format) {
+            SarFormat.BEFORE_2021 -> Regex(
+                """^[$spaces]*\d+\S?[.,](.+?)[:?]([$spaces\w].+?)${'$'}""",
+                setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
+            )
+            // For post-2022, include the line number in the capture because (we hope) the line number formatting is
+            //  more consistent, and we need the line number to increase accuracy for cases like "parent's adjusted
+            //  gross income" where the search string is not globally unique
+            SarFormat.AFTER_2022 -> Regex(
+                """^[$spaces]*(\d{1,3}\w?\.[$spaces]*.+?)[:?]([$spaces\w].+?)${'$'}""",
+                setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
+            )
+        }
+
         val matchResults = regex.findAll(text)
         val fieldsFound = HashSet<CsvHeaders.Fields>()
 
