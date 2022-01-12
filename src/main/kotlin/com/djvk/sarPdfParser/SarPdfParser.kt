@@ -25,12 +25,10 @@ class SarPdfParser {
             }
             val parsedValues = HashMap<CsvHeaders.Fields, String>()
             try {
-                val format = determineReportFormat(text)
-                if (format == SarFormat.AFTER_2022) {
-                    parseLoansTablesFields(text, parsedValues)
-                }
-                parseGlobalFields(format, text, parsedValues)
-                parseGeneralTableFields(format, text, parsedValues)
+                validateReportYear(text)
+                parseLoansTablesFields(text, parsedValues)
+                parseGlobalFields(text, parsedValues)
+                parseGeneralTableFields(text, parsedValues)
             } catch (e: Exception) {
                 throw FileProcessingException(file.name, e)
             }
@@ -61,32 +59,25 @@ class SarPdfParser {
         )
     }
 
-    private fun determineReportFormat(text: String): SarFormat {
+    private fun validateReportYear(text: String) {
         val (startYear, _) = getReportYears(text)
-        return SarFormat.getFormatFromStartYear(startYear)
+        if (startYear < 2022) {
+            throw IllegalArgumentException("This version of the software only operates on 2022 and later SAR files. Found start year of $startYear")
+        }
     }
 
     private fun parseGlobalFields(
-        format: SarFormat,
         text: String,
         parsedValues: MutableMap<CsvHeaders.Fields, String>
     ) {
-        val efc = getEFCNumber(format, text)
+        val efc = getEFCNumber(text)
         parsedValues[CsvHeaders.Fields.EFC_NUMBER] = efc.number ?: ""
         parsedValues[CsvHeaders.Fields.IS_EFC_STARRED] = if (efc.isStarred) "1" else "0"
         parsedValues[CsvHeaders.Fields.HAS_EFC_C_SUFFIX] = if (efc.hasCSuffix) "1" else "0"
         parsedValues[CsvHeaders.Fields.HAS_EFC_H_SUFFIX] = if (efc.hasHSuffix) "1" else "0"
-        when (format) {
-            SarFormat.BEFORE_2021 -> {
-                parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = getDate(text, applicationReceiptPrefix)
-                parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = getDate(text, processedPrefix)
-            }
-            SarFormat.AFTER_2022 -> {
                 val headerData = getHeaderTableDataAfter2022(text)
                 parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = headerData.receivedDate
                 parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = headerData.processedDate
-            }
-        }
         val (startYear, endYear) = getReportYears(text)
         parsedValues[CsvHeaders.Fields.YEAR] = "$startYear-$endYear"
     }
@@ -118,18 +109,10 @@ class SarPdfParser {
         )
     }
 
-    fun getEFCNumber(format: SarFormat, pdfContent: String): EfcData {
-        val regex = when (format) {
-            SarFormat.BEFORE_2021 -> {
-                // Regex contains a bunch of goofy alternate space characters
-                """EFC:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(RegexOption.IGNORE_CASE)
-            }
-            SarFormat.AFTER_2022 -> {
-                """Expected[$spaces]*Family[$spaces]*Contribution:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(
+    fun getEFCNumber(pdfContent: String): EfcData {
+        val regex = """Expected[$spaces]*Family[$spaces]*Contribution:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(
                     RegexOption.IGNORE_CASE
                 )
-            }
-        }
         val rawEfc = regex.find(pdfContent, 0)
 
         return EfcData(
@@ -148,24 +131,17 @@ class SarPdfParser {
     )
 
     private fun parseGeneralTableFields(
-        format: SarFormat,
         text: String,
         parsedValues: MutableMap<CsvHeaders.Fields, String>
     ) {
         val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
-        val regex = when (format) {
-            SarFormat.BEFORE_2021 -> Regex(
-                """^[$spaces]*\d+\S?[.,](.+?)[:?]([$spaces\w].+?)${'$'}""",
-                setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
-            )
-            // For post-2022, include the line number in the capture because (we hope) the line number formatting is
-            //  more consistent, and we need the line number to increase accuracy for cases like "parent's adjusted
-            //  gross income" where the search string is not globally unique
-            SarFormat.AFTER_2022 -> Regex(
+        // For post-2022, include the line number in the capture because (we hope) the line number formatting is
+        //  more consistent, and we need the line number to increase accuracy for cases like "parent's adjusted
+        //  gross income" where the search string is not globally unique
+        val regex = Regex(
                 """^[$spaces]*(\d{1,3}\w?\.[$spaces]*.+?)[:?]([$spaces\w].+?)${'$'}""",
                 setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
             )
-        }
 
         val matchResults = regex.findAll(text)
         val fieldsFound = HashSet<CsvHeaders.Fields>()
@@ -173,7 +149,7 @@ class SarPdfParser {
         for (matchResult in matchResults) {
             if (matchResult.groups.size != 3) continue
 
-            val (fieldString, response) = getFieldAndResponse(format, matchResult)
+            val (fieldString, response) = getFieldAndResponse(matchResult)
             val field = CsvHeaders.fieldsByNormalizedPdfName[PdfNormalizer.normalizeField(fieldString)] ?: continue
             fieldsFound.add(field)
             parsedValues[field] = getFieldValue(field, response, parsedValues)
@@ -195,14 +171,11 @@ class SarPdfParser {
         parsedValues[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
     }
 
-    private fun getFieldAndResponse(format: SarFormat, matchResult: MatchResult): Pair<String, String> {
+    private fun getFieldAndResponse(matchResult: MatchResult): Pair<String, String> {
         val groups = matchResult.groups
         val rawLabel = groups[1]!!.value.trim()
         // Check if YES/NO response is interleaved in label because life is suffering
-        val labelRegex = when (format) {
-            SarFormat.BEFORE_2021 -> Regex("""[$spaces](NO|YES|)[$spaces]""")
-            SarFormat.AFTER_2022 -> Regex("""[\s$spaces](No|Yes)[\s$spaces]""")
-        }
+        val labelRegex = Regex("""[\s$spaces](No|Yes)[\s$spaces]""")
         val valueInLabelMatch = labelRegex.find(rawLabel)
         val valueInLabel = valueInLabelMatch?.groups?.get(1)?.value
         // If YES/NO response is not interleaved in label

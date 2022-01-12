@@ -115,7 +115,7 @@
                     <compilerPlugins>
                         <!-- Or "jpa" for JPA support -->
                         <!--<plugin>no-arg</plugin>-->
-                        <plugin>jpa</plugin>
+<!--                        <plugin>jpa</plugin>-->
                     </compilerPlugins>
 
                     <!--<pluginOptions>-->

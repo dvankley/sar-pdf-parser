@@ -39,25 +39,21 @@ object CsvHeaders {
         YEAR(DocType.SAR, "Year"),
         STUDENT_FIRST_NAME(
             DocType.SAR, "Student First Name", setOf(
-                "Student’s  First  Name",
                 "2. Student’s  First  Name",
             )
         ),
         STUDENT_MIDDLE_NAME(
             DocType.SAR, "Student Middle Name", setOf(
-                "Student’s  Middle  Initial",
                 "3. Student’s  Middle  Initial",
             )
         ),
         STUDENT_LAST_NAME(
             DocType.SAR, "Student Last Name", setOf(
-                "Student’s  Last  Name",
                 "1. Student’s  Last  Name",
             )
         ),
         STUDENT_DOB(
             DocType.SAR, "Student Date of Birth", setOf(
-                "Student's  Date  of  Birth",
                 "9. Student's  Date  of  Birth",
             )
         ),
@@ -65,19 +61,16 @@ object CsvHeaders {
             DocType.SAR,
             "Social Security Number Last 4 Digits",
             setOf(
-                "Student's  Social  Security  Number",
                 "8. Student's  Social  Security  Number",
             )
         ),
         PARENT_1_ED_LEVEL(
             DocType.SAR, "Parent 1 Educational Level", setOf(
-                "Parent  1  Educational  Level",
                 "24. Parent  1  Educational  Level",
             )
         ),
         PARENT_2_ED_LEVEL(
             DocType.SAR, "Parent 2 Educational Level", setOf(
-                "Parent  2  Educational  Level",
                 "25. Parent  2  Educational  Level",
             )
         ),
@@ -87,7 +80,6 @@ object CsvHeaders {
             DocType.SAR,
             "Student's  2015  Adjusted Gross  Income",
             setOf(
-                "Student's  2015  Adjusted Gross  Income",
                 "36. Student's  2015  Adjusted Gross  Income",
             )
         ),
@@ -95,21 +87,13 @@ object CsvHeaders {
             DocType.SAR,
             "Parents'  2015  Adjusted Gross  Income",
             setOf(
-                "Parents'  2015  Adjusted Gross  Income",
                 "84. 2015  Adjusted Gross  Income",
-            )
-        ),
-        CHILD_SUPPORT_PAID(
-            DocType.SAR, "Child Support Paid", setOf(
-                "Student's  Child  Support Paid",
-                "Student's  Child  Support Paid",
             )
         ),
         STUDENT_HAS_CHILDREN(
             DocType.SAR,
             "Does student have children they support?",
             setOf(
-                "Does Student Have  Children He/She Supports",
                 "50. Does the Student Support Children",
             )
         ),
@@ -117,7 +101,6 @@ object CsvHeaders {
             DocType.SAR,
             "Does student have other non-child/non-spouse dependents?",
             setOf(
-                "Does Student Have  Dependents  Other than  Children/Spouse",
                 "51. Does the student support other dependents",
             )
         ),
@@ -125,13 +108,11 @@ object CsvHeaders {
             DocType.SAR,
             "Parents deceased / student ward of court / in foster care",
             setOf(
-                "Parents  Deceased?/Student  Ward  of  Court?/In  Foster Care",
                 "52. Is the student a ward of court or in foster care or are the student's parents deceased",
             )
         ),
         EMANCIPATED_MINOR(
             DocType.SAR, "Emancipated minor?", setOf(
-                "Is  or Was Student an  Emancipated  Minor",
                 "53. Is the student an emancipated minor",
             )
         ),
@@ -139,7 +120,6 @@ object CsvHeaders {
             DocType.SAR,
             "In legal guardianship?",
             setOf(
-                "Is  or Was Student in  Legal  Guardianship",
                 "54. Is the student in a legal guardianship",
             )
         ),
@@ -147,9 +127,6 @@ object CsvHeaders {
             DocType.SAR,
             "Unaccompanied homeless youth",
             setOf(
-                "Is Student an Unaccompanied Homeless Youth as Determined by HUD",
-                "Is  Student an  Unaccompanied  Homeless  Youth  as  Determined  by  Director  of Homeless  Youth  Center",
-                "Is Student an Unaccompanied Homeless Youth as Determined by High School/Homeless Liaison",
                 "55. Is the student unaccompanied and homeless as determined by a high school homeless liaison",
                 "56. Is the student unaccompanied and homeless as determined by the U.S. Department of Housing and Urban Development",
                 "57. Is the student unaccompanied and homeless as determined by a director of a homeless youth center",
@@ -157,25 +134,21 @@ object CsvHeaders {
         ),
         PARENTS_RECEIVED_SNAP(
             DocType.SAR, "Parents received SNAP", setOf(
-                "Parents  Received  SNAP",
                 "75. Did the parent receive SNAP",
             )
         ),
         PARENTS_RECEIVED_TANF(
             DocType.SAR, "Parents received TANF", setOf(
-                "Parents  Received  TANF",
                 "77. Did the parent receive TANF",
             )
         ),
         STUDENT_RECEIVED_SNAP(
             DocType.SAR, "Student received SNAP", setOf(
-                "Student  Received  SNAP",
                 "96. Did the student receive SNAP",
             )
         ),
         STUDENT_RECEIVED_TANF(
             DocType.SAR, "Student received TANF", setOf(
-                "Student  Received  TANF",
                 "98. Did the student receive TANF",
             )
         ),
