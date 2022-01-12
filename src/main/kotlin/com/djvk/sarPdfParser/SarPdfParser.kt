@@ -1,6 +1,6 @@
 package com.djvk.sarPdfParser
 
-import com.djvk.sarPdfParser.constants.SarFormat
+import com.djvk.sarPdfParser.constants.*
 import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
@@ -8,8 +8,6 @@ import java.util.*
 
 class SarPdfParser {
     private val dateRegex = """\d{2}/\d{2}/\d{4}"""
-    private val dashes = PdfNormalizer.groupByAsciiForRegex('-')
-    private val spaces = PdfNormalizer.groupByAsciiForRegex(' ')
     val applicationReceiptPrefix = """Application[$spaces]*Receipt"""
     val processedPrefix = """Processed"""
 
@@ -279,59 +277,70 @@ class SarPdfParser {
         val ffelText = text.substring(ffelHeaderMatch.range.last + 1, perkinsHeaderMatch.range.first)
         val perkinsText = text.substring(perkinsHeaderMatch.range.last + 1, teachHeaderMatch.range.first)
 
-        val ffelValueRegex = Regex(
+        val valueRegex = Regex(
             """([${'$'}\d,]+|(?:N/A))""",
             setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE)
         )
 
         // Iterate over each FFEL field and try to find its data in the search text
-        val labelMatches = findTableLabelPositions(ffelText, CsvHeaders.FfelLoanFields.values().map { it.pdfLabel })
-        val valueMatchSequences = findTableInterleavedValues(ffelText, ffelValueRegex, labelMatches)
+        val ffelLabelMatches = findTableLabelPositions(ffelText, FfelLoanFields.values().toList())
+        val ffelValueMatches = findTableInterleavedValues(ffelText, valueRegex, ffelLabelMatches)
 
-        valueMatchSequences.forEachIndexed { index, valueMatchSequence ->
-            val loanField = CsvHeaders.FfelLoanFields.values()[index]
-            val matches = valueMatchSequence.toList()
-            if (matches.size != 3) {
-                throw IllegalArgumentException("Expected 3 FFEL value matches, found ${matches.size}")
+        ffelValueMatches.forEachIndexed { ffelIndex, ffelValueMatch ->
+            val loanField = FfelLoanFields.values()[ffelIndex]
+            if (ffelValueMatch.size != 3) {
+                throw IllegalArgumentException("Expected 3 FFEL value matches, found ${ffelValueMatch.size}")
             }
-            parsedValues[loanField.balanceField] = matches[0].groupValues[1]
-            parsedValues[loanField.remainingField] = matches[1].groupValues[1]
-            parsedValues[loanField.totalField] = matches[2].groupValues[1]
+            parsedValues[loanField.balanceField] = ffelValueMatch[0].groupValues[1]
+            parsedValues[loanField.remainingField] = ffelValueMatch[1].groupValues[1]
+            parsedValues[loanField.totalField] = ffelValueMatch[2].groupValues[1]
         }
 
+        // And again for Perkins
+        val perkinsLabelMatches = findTableLabelPositions(perkinsText, PerkinsLoanFields.values().toList())
+        val perkinsValueMatches = findTableInterleavedValues(perkinsText, valueRegex, perkinsLabelMatches)
+
+        perkinsValueMatches.forEachIndexed { perkinsIndex, perkinsValueMatch ->
+            val loanField = PerkinsLoanFields.values()[perkinsIndex]
+            if (perkinsValueMatch.size != 1) {
+                throw IllegalArgumentException("Expected 1 Perkins value matches, found ${perkinsValueMatch.size}")
+            }
+            parsedValues[loanField.field] = perkinsValueMatch[0].groupValues[1]
+        }
     }
 
     /**
-     * Finds the position of an ordered sequence of labels given in [labelLiterals] with [text].
-     * Each of [labelLiterals] will be split by whitespace and will still match even if there are non-matching
+     * Finds the position of an ordered sequence of labels given in [labelPatterns] with [text].
+     * Each of [labelPatterns] will be split by whitespace and will still match even if there are non-matching
      *  characters between. This is intended to more effectively parse interleaved values.
-     * This function is intended to be used with [findTableInterleavedValues]
+     *
+     * TODO: consider implementing this approach for all table fields, not just loan fields as it is currently.
+     *
+     * This output of this function is intended to be used with [findTableInterleavedValues]
      */
-    fun findTableLabelPositions(text: String, labelLiterals: List<String>): List<MatchResult> {
+    fun findTableLabelPositions(text: String, labelPatterns: List<FilterablePdfTableField>): List<MatchResult> {
         val labelMatches = mutableListOf<MatchResult>()
-        for (label in labelLiterals) {
+        for (label in labelPatterns) {
             val searchStartIndex = if (labelMatches.isEmpty()) 0 else labelMatches.last().range.last + 1
-            labelMatches.add(label
-                .split(' ')
-                .joinToString(".+?")
-                // Build the label regex from the label literal string
-                .toRegex(setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
-                .find(text, searchStartIndex)
-                ?: throw IllegalArgumentException("Failed to find expected table label $label")
+            labelMatches.add(
+                label.pdfLabelPattern
+                    .toRegex(setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
+                    .find(text, searchStartIndex)
+                    ?: throw IllegalArgumentException("Failed to find expected table label $label")
             )
         }
         return labelMatches
     }
 
     /**
-     * This function is intended to be used with [findTableLabelPositions]
+     * @param labelMatches This is intended to be supplied by [findTableLabelPositions]
      */
     fun findTableInterleavedValues(
         text: String,
         valueRegex: Regex,
         labelMatches: List<MatchResult>
-    ): List<Sequence<MatchResult>> {
-        val valueMatches = mutableListOf<Sequence<MatchResult>>()
+    ): List<List<MatchResult>> {
+        val valueMatches = mutableListOf<List<MatchResult>>()
         labelMatches.forEachIndexed { index, matchResult ->
             val searchText = if (index == labelMatches.size - 1) {
                 /** If this is the last label match, search from the start of this label to the end of [text] */
@@ -342,14 +351,22 @@ class SarPdfParser {
                 text.substring(matchResult.range.first, labelMatches[index + 1].range.first - 1)
             }
 
-            valueMatches.add(valueRegex.findAll(searchText))
+            /**
+             * Filter out all the label content so we can search for only values.
+             * Any text in a capture group in [FilterablePdfTableField.pdfLabelPattern] is considered to be label text,
+             *  and will be removed.
+             * The remaining text will be searched for values.
+             * This is done to tolerate (as best we can) values that are interleaved with labels.
+             */
+            val filteredSearchText = matchResult.groupValues
+                // Omit group 0 because that has the entire capture
+                .subList(1, matchResult.groupValues.size - 1)
+                .fold(searchText) { acc, element -> acc.replace(element, "") }
+
+            valueMatches.add(valueRegex.findAll(filteredSearchText).toList())
         }
         return valueMatches
     }
-
-//    fun parsePerkinsLoansTableFields(text: String, parsedValues: MutableMap<CsvHeaders.Fields, String>) {
-//
-//    }
 
     private fun getLayoutText(document: PDDocument): String {
         val stripper = PDFLayoutTextStripper()

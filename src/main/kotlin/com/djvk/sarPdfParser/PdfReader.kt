@@ -1,6 +1,6 @@
 package com.djvk.sarPdfParser
 
-import com.djvk.sarPdfParser.exceptions.dump
+import com.djvk.sarPdfParser.constants.CsvHeaders
 import kotlinx.coroutines.*
 import java.io.File
 import kotlin.coroutines.EmptyCoroutineContext
@@ -24,11 +24,13 @@ class PdfReader(private val files: Array<File>) {
                     output[PdfNormalizer.normalizeField(CsvHeaders.Fields.FILENAME.csvFieldName)] = fileName
                     primaryCsvWriter.insertRow(output)
                 } catch (e: Exception) {
-                    println("Error processing file $fileName ${e.dump()}")
-                    errorCsvWriter.insertRow(mapOf(
+                    println("${e.message}\n${e.printStackTrace()}")
+                    errorCsvWriter.insertRow(
+                        mapOf(
                             PdfNormalizer.normalizeField(CsvHeaders.Fields.FILENAME.csvFieldName) to fileName,
                             PdfNormalizer.normalizeField(CsvHeaders.Fields.ERROR.csvFieldName) to e.localizedMessage
-                    ))
+                        )
+                    )
                 }
             }
         }

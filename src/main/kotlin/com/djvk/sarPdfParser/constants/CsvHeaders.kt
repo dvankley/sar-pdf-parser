@@ -1,4 +1,6 @@
-package com.djvk.sarPdfParser
+package com.djvk.sarPdfParser.constants
+
+import com.djvk.sarPdfParser.PdfNormalizer
 
 object CsvHeaders {
     val fieldsByNormalizedPdfName = mutableMapOf<String, Fields>()
@@ -221,18 +223,6 @@ object CsvHeaders {
         ERROR(DocType.ERROR, "Error"),
 
         FILENAME(DocType.ALL, "Filename");
-    }
-
-    enum class FfelLoanFields(
-        val pdfLabel: String,
-        val balanceField: Fields,
-        val remainingField: Fields,
-        val totalField: Fields,
-    ) {
-        SUBSIDIZED("Subsidized Loans", Fields.SUBSIDIZED_LOANS_BALANCE, Fields.SUBSIDIZED_LOANS_REMAINING, Fields.SUBSIDIZED_LOANS_TOTAL),
-        UNSUBSIDIZED("Unsubsidized Loans", Fields.UNSUBSIDIZED_LOANS_BALANCE, Fields.UNSUBSIDIZED_LOANS_REMAINING, Fields.UNSUBSIDIZED_LOANS_TOTAL),
-        COMBINED("Combined Loans", Fields.COMBINED_LOANS_BALANCE, Fields.COMBINED_LOANS_REMAINING, Fields.COMBINED_LOANS_TOTAL),
-        UNALLOCATED("Unallocated Consolidation Loans", Fields.UNALLOCATED_LOANS_BALANCE, Fields.UNALLOCATED_LOANS_REMAINING, Fields.UNALLOCATED_LOANS_TOTAL),
     }
 
     enum class DocType {
