@@ -277,14 +277,14 @@ class SarPdfParser {
         val ffelText = text.substring(ffelHeaderMatch.range.last + 1, perkinsHeaderMatch.range.first)
         val perkinsText = text.substring(perkinsHeaderMatch.range.last + 1, teachHeaderMatch.range.first)
 
-        val valueRegex = Regex(
-            """([${'$'}\d,]+|(?:N/A))""",
+        val loanValueRegex = Regex(
+            """((?:\${'$'}\d+,\d{3})|(?:\${'$'}0)|(?:N/A))""",
             setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE)
         )
 
         // Iterate over each FFEL field and try to find its data in the search text
         val ffelLabelMatches = findTableLabelPositions(ffelText, FfelLoanFields.values().toList())
-        val ffelValueMatches = findTableInterleavedValues(ffelText, valueRegex, ffelLabelMatches)
+        val ffelValueMatches = findTableInterleavedValues(ffelText, loanValueRegex, ffelLabelMatches)
 
         ffelValueMatches.forEachIndexed { ffelIndex, ffelValueMatch ->
             val loanField = FfelLoanFields.values()[ffelIndex]
@@ -298,7 +298,7 @@ class SarPdfParser {
 
         // And again for Perkins
         val perkinsLabelMatches = findTableLabelPositions(perkinsText, PerkinsLoanFields.values().toList())
-        val perkinsValueMatches = findTableInterleavedValues(perkinsText, valueRegex, perkinsLabelMatches)
+        val perkinsValueMatches = findTableInterleavedValues(perkinsText, loanValueRegex, perkinsLabelMatches)
 
         perkinsValueMatches.forEachIndexed { perkinsIndex, perkinsValueMatch ->
             val loanField = PerkinsLoanFields.values()[perkinsIndex]
