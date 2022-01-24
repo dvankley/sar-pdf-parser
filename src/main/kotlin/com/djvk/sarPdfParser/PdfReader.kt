@@ -28,7 +28,7 @@ class PdfReader(private val files: Array<File>) {
                     errorCsvWriter.insertRow(
                         mapOf(
                             PdfNormalizer.normalizeField(CsvHeaders.Fields.FILENAME.csvFieldName) to fileName,
-                            PdfNormalizer.normalizeField(CsvHeaders.Fields.ERROR.csvFieldName) to e.localizedMessage
+                            PdfNormalizer.normalizeField(CsvHeaders.Fields.ERROR.csvFieldName) to getLastExceptionInChain(e).localizedMessage
                         )
                     )
                 }
@@ -36,5 +36,10 @@ class PdfReader(private val files: Array<File>) {
         }
         errorCsvWriter.finish()
         primaryCsvWriter.finish()
+    }
+
+    private tailrec fun getLastExceptionInChain(e: Throwable): Throwable {
+        val cause = e.cause ?: return e
+        return getLastExceptionInChain(cause)
     }
 }
