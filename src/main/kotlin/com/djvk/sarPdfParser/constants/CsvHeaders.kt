@@ -78,14 +78,14 @@ object CsvHeaders {
         // Note the explicit years in these fields. They'll be specifically targeted in the field normalizing process.
         STUDENT_GROSS_INCOME(
             DocType.SAR,
-            "Student's  2015  Adjusted Gross  Income",
+            "Student's  Adjusted Gross  Income",
             setOf(
                 "36. Student's  2015  Adjusted Gross  Income",
             )
         ),
         PARENT_GROSS_INCOME(
             DocType.SAR,
-            "Parents'  2015  Adjusted Gross  Income",
+            "Parents'  Adjusted Gross  Income",
             setOf(
                 "84. 2015  Adjusted Gross  Income",
             )
