@@ -75,9 +75,9 @@ class SarPdfParser {
         parsedValues[CsvHeaders.Fields.IS_EFC_STARRED] = if (efc.isStarred) "1" else "0"
         parsedValues[CsvHeaders.Fields.HAS_EFC_C_SUFFIX] = if (efc.hasCSuffix) "1" else "0"
         parsedValues[CsvHeaders.Fields.HAS_EFC_H_SUFFIX] = if (efc.hasHSuffix) "1" else "0"
-                val headerData = getHeaderTableDataAfter2022(text)
-                parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = headerData.receivedDate
-                parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = headerData.processedDate
+        val headerData = getHeaderTableDataAfter2022(text)
+        parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = headerData.receivedDate
+        parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = headerData.processedDate
         val (startYear, endYear) = getReportYears(text)
         parsedValues[CsvHeaders.Fields.YEAR] = "$startYear-$endYear"
     }
@@ -89,30 +89,57 @@ class SarPdfParser {
         return rawDate?.groupValues?.get(1) ?: throw RuntimeException("Failed to find $prefixString date")
     }
 
-    data class HeaderTableDataAfter2022(
+    data class HeaderTableData(
         val receivedDate: String,
         val processedDate: String,
         val DRN: Int,
     )
 
-    fun getHeaderTableDataAfter2022(pdfContent: String): HeaderTableDataAfter2022 {
-        val regex = ("""Application[$spaces]*Receipt[$spaces]*Date:[$spaces]*Processed[$spaces]*Date:[$spaces]*""" +
-                """Data[$spaces]*Release[$spaces]*Number[$spaces]*\(DRN\)[$spaces\s]*""" +
-                """($dateRegex)[$spaces]*($dateRegex)[$spaces]*(\d+)""")
-            .toRegex(RegexOption.IGNORE_CASE)
-        val matches = regex.find(pdfContent, 0)
+    data class HeaderPattern(
+        val pattern: String,
+        val parser: (MatchResult) -> HeaderTableData,
+    )
 
-        return HeaderTableDataAfter2022(
-            matches?.groupValues?.get(1) ?: throw RuntimeException("Failed to find header table dates"),
-            matches.groupValues[2],
-            matches.groupValues[3].toInt(),
+    fun getHeaderTableDataAfter2022(pdfContent: String): HeaderTableData {
+        val patterns = listOf(
+            HeaderPattern(
+                """Application[$spaces]*Receipt[$spaces]*Date:[$spaces]*Processed[$spaces]*Date:[$spaces]*""" +
+                        """Data[$spaces]*Release[$spaces]*Number[$spaces]*\(DRN\)[$spaces\s]*""" +
+                        """($dateRegex)[$spaces]*($dateRegex)[$spaces]*(\d+)"""
+            ) { match ->
+                HeaderTableData(
+                    match.groupValues[1],
+                    match.groupValues[2],
+                    match.groupValues[3].toInt(),
+                )
+            },
+            HeaderPattern(
+                """Processed[$swn]*Date:[$swn]*($dateRegex)[$swn]*""" +
+                        """Data[$swn]*Release[$swn]*Number[$swn]*\(DRN\)[$swn]*(\d+)[$swn]*""" +
+                        """Application[$swn]*Receipt[$swn]*Date:[$swn]*($dateRegex)"""
+            ) { match ->
+                HeaderTableData(
+                    match.groupValues[3],
+                    match.groupValues[1],
+                    match.groupValues[2].toInt(),
+                )
+            },
         )
+
+        for ((pattern, parser) in patterns) {
+            val regex = pattern.toRegex(RegexOption.IGNORE_CASE)
+            val matches = regex.find(pdfContent, 0) ?: continue
+            return parser(matches)
+        }
+
+        throw RuntimeException("Failed to find header table dates")
     }
 
     fun getEFCNumber(pdfContent: String): EfcData {
-        val regex = """Expected[$spaces]*Family[$spaces]*Contribution:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(
-                    RegexOption.IGNORE_CASE
-                )
+        val regex =
+            """Expected[$spaces]*Family[$spaces]*Contribution:[$spaces]*(\d+)[$spaces]*(\*)?[$spaces]*([ch])?""".toRegex(
+                RegexOption.IGNORE_CASE
+            )
         val rawEfc = regex.find(pdfContent, 0)
 
         return EfcData(
@@ -139,9 +166,9 @@ class SarPdfParser {
         //  more consistent, and we need the line number to increase accuracy for cases like "parent's adjusted
         //  gross income" where the search string is not globally unique
         val regex = Regex(
-                """^[$spaces]*(\d{1,3}\w?\.[$spaces]*.+?)[:?]([$spaces\w].+?)${'$'}""",
-                setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
-            )
+            """^[$spaces]*(\d{1,3}\w?\.[$spaces]*.+?)[:?]([$spaces\w].+?)${'$'}""",
+            setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
+        )
 
         val matchResults = regex.findAll(text)
         val fieldsFound = HashSet<CsvHeaders.Fields>()

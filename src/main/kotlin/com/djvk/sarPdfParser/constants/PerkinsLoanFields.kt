@@ -1,8 +1,5 @@
 package com.djvk.sarPdfParser.constants
 
-import com.djvk.sarPdfParser.dashes
-import com.djvk.sarPdfParser.spaces
-
 enum class PerkinsLoanFields(
     override val pdfLabelPattern: String,
     val field: CsvHeaders.Fields,
