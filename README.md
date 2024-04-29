@@ -2,7 +2,9 @@
 Student Aid Report PDF parser
 
 ## Prerequisites
-You needs Java 8 and Maven. You should use Intellij for development but I can't stop you from using other tools if you want.
+This version is only compatible with 2024 and later FSS reports. Use an earlier release for older report formats.
+
+This requires Java 17 and Maven. You should use Intellij for development but I can't stop you from using other tools if you want.
 
 A working knowledge of Kotlin is recommended. It's basically Java with better syntax.
 
