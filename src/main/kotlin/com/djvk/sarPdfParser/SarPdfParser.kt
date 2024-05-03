@@ -34,6 +34,14 @@ class SarPdfParser {
     suspend fun processText(text: String): Map<CsvHeaders.Fields, String> {
         val parsedValues = HashMap<CsvHeaders.Fields, String>()
         validateReportYear(text)
+        // Header
+        // "Estimated Federal Student Aid section"
+        // Answers
+            // Student Section
+                // Personal Identifiers
+
+
+
         parseLoansTablesFields(text, parsedValues)
         parseGlobalFields(text, parsedValues)
         parseGeneralTableFields(text, parsedValues)
@@ -65,8 +73,8 @@ class SarPdfParser {
 
     private fun validateReportYear(text: String) {
         val (startYear, _) = getReportYears(text)
-        if (startYear < 2022) {
-            throw IllegalArgumentException("This version of the software only operates on 2022 and later SAR files. Found start year of $startYear")
+        if (startYear < 2024) {
+            throw IllegalArgumentException("This version of the software only operates on 2024 and later FSS files. Found start year of $startYear")
         }
     }
 

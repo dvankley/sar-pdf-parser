@@ -11,5 +11,5 @@ interface FilterablePdfTableField {
      * Other unknown values may be matched by the pattern but they should NOT be in capture groups. This is because
      *  all capture group text will later be removed to allow more effective matching of interleaved values.
      */
-    val pdfLabelPattern: String
+    val pdfLabelPattern: RegexPattern
 }

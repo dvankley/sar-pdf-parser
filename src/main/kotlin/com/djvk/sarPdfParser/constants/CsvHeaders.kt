@@ -20,6 +20,12 @@ object CsvHeaders {
     val requiredTableFields =
         listOf(Fields.STUDENT_FIRST_NAME, Fields.STUDENT_LAST_NAME, Fields.STUDENT_DOB, Fields.STUDENT_SSN_L4)
 
+    enum class DataTypes {
+        BOOLEAN,
+        DOLLARS,
+        STRING,
+    }
+
     /**
      * @property docType Document type this field applies to
      * @property csvFieldName Name of CSV column this field is output to
@@ -29,41 +35,67 @@ object CsvHeaders {
      *  for a matching on this property, so there needs to be an entry with a line number for post-2022.
      * Null if this field isn't a PDF table field.
      */
-    enum class Fields(val docType: DocType, val csvFieldName: String, val pdfTableFieldNames: Set<String>? = null) {
-        EFC_NUMBER(DocType.SAR, "EFC Number"),
-        IS_EFC_STARRED(DocType.SAR, "Is EFC Starred"),
-        HAS_EFC_C_SUFFIX(DocType.SAR, "Has EFC C Suffix"),
-        HAS_EFC_H_SUFFIX(DocType.SAR, "Has EFC H Suffix"),
-        RECEIVED_DATE(DocType.SAR, "Received Date"),
-        PROCESSED_DATE(DocType.SAR, "Processed Date"),
-        YEAR(DocType.SAR, "Year"),
+    enum class Fields(
+        val docType: DocType,
+        val csvFieldName: String,
+        val dataType: DataTypes,
+        val pdfTableFieldNames: Set<String>? = null
+    ) {
+        YEAR(DocType.SAR, "Year", DataTypes.STRING),
+        RECEIVED_DATE(DocType.SAR, "Received Date", DataTypes.STRING),
+        PROCESSED_DATE(DocType.SAR, "Processed Date", DataTypes.STRING),
+        SAI(DocType.SAR, "Student Aid Index (SAI)", DataTypes.STRING),
         STUDENT_FIRST_NAME(
-            DocType.SAR, "Student First Name", setOf(
+            DocType.SAR, "Student First Name", DataTypes.STRING, setOf(
                 "2. Student’s  First  Name",
             )
         ),
         STUDENT_MIDDLE_NAME(
-            DocType.SAR, "Student Middle Name", setOf(
+            DocType.SAR, "Student Middle Name", DataTypes.STRING, setOf(
                 "3. Student’s  Middle  Initial",
             )
         ),
         STUDENT_LAST_NAME(
-            DocType.SAR, "Student Last Name", setOf(
+            DocType.SAR, "Student Last Name", DataTypes.STRING, setOf(
                 "1. Student’s  Last  Name",
             )
         ),
         STUDENT_DOB(
-            DocType.SAR, "Student Date of Birth", setOf(
+            DocType.SAR, "Student Date of Birth", DataTypes.STRING, setOf(
                 "9. Student's  Date  of  Birth",
             )
         ),
         STUDENT_SSN_L4(
             DocType.SAR,
             "Social Security Number Last 4 Digits",
+            DataTypes.STRING,
             setOf(
                 "8. Student's  Social  Security  Number",
             )
         ),
+        STUDENT_EMAIL(DocType.SAR, "Student Email", DataTypes.STRING),
+        STUDENT_HAS_DEPENDENTS(
+            DocType.SAR,
+            "Does student have other non-child/non-spouse dependents?",
+            DataTypes.BOOLEAN,
+            setOf(
+                "51. Does the student support other dependents",
+            )
+        ),
+        // Logical OR of several fields
+        ORPHAN_STATE_CUSTODY_OR_EMANCIPATED(DocType.SAR, "Orphan, State Custody, or Emancipated", DataTypes.BOOLEAN),
+        LEGAL_GUARDIAN_OTHER_THAN_PARENT(DocType.SAR, "Legal Guardian Other Than Parent or Stepparent", DataTypes.BOOLEAN),
+        // TODO: resolve ambiguity in notes about this
+        HOMELESS(DocType.SAR, "Homeless or at Risk of Being Homeless", DataTypes.BOOLEAN),
+        CANT_PROVIDE_PARENT_INFORMATION(DocType.SAR, "Can't Provide Parent Information--Unusual Circumstances", DataTypes.BOOLEAN),
+        APPLYING_FOR_UNSUBSIDIZED_ONLY(DocType.SAR, "Applying For Unsubsidized Loan Only", DataTypes.BOOLEAN),
+        // TODO: is this just yes/no?
+        PARENT_ATTENDED_COLLEGE(DocType.SAR, "Parent Attended College", DataTypes.BOOLEAN),
+        PARENT_MARITAL_STATUS(DocType.SAR, "Parent Current Marital Status", DataTypes.STRING),
+        FAMILY_RECEIVED_EIC(DocType.SAR, "Any Family Member Received Earned Income Credit (EIC)", DataTypes.BOOLEAN),
+        FAMILY_RECEIVED_HOUSING_ASSISTANCE(DocType.SAR, "Any Family Member Received Federal Housing Assistance", DataTypes.BOOLEAN),
+        FAMILY_RECEIVED_(DocType.SAR, "", DataTypes.BOOLEAN),
+        // TODO: pick up here
         PARENT_1_ED_LEVEL(
             DocType.SAR, "Parent 1 Educational Level", setOf(
                 "24. Parent  1  Educational  Level",
@@ -95,13 +127,6 @@ object CsvHeaders {
             "Does student have children they support?",
             setOf(
                 "50. Does the Student Support Children",
-            )
-        ),
-        STUDENT_HAS_DEPENDENTS(
-            DocType.SAR,
-            "Does student have other non-child/non-spouse dependents?",
-            setOf(
-                "51. Does the student support other dependents",
             )
         ),
         DECEASED_PARENTS_COURT_WARD_FOSTER_CARE(
