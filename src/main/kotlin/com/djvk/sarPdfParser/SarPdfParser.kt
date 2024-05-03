@@ -23,18 +23,22 @@ class SarPdfParser {
             if (text.isEmpty() || text.isBlank()) {
                 throw FileProcessingException(file.name, RuntimeException("No content parsed from file"))
             }
-            val parsedValues = HashMap<CsvHeaders.Fields, String>()
             try {
-                validateReportYear(text)
-                parseLoansTablesFields(text, parsedValues)
-                parseGlobalFields(text, parsedValues)
-                parseGeneralTableFields(text, parsedValues)
+                return mapToCSVMap(processText(text))
             } catch (e: Exception) {
                 throw FileProcessingException(file.name, e)
             }
-
-            return mapToCSVMap(parsedValues)
         }
+    }
+
+    suspend fun processText(text: String): Map<CsvHeaders.Fields, String> {
+        val parsedValues = HashMap<CsvHeaders.Fields, String>()
+        validateReportYear(text)
+        parseLoansTablesFields(text, parsedValues)
+        parseGlobalFields(text, parsedValues)
+        parseGeneralTableFields(text, parsedValues)
+
+        return parsedValues
     }
 
     fun getReportYears(text: String): Pair<Int, Int> {
@@ -373,7 +377,7 @@ class SarPdfParser {
         return stripper.getText(document)
     }
 
-    private fun mapToCSVMap(m: HashMap<CsvHeaders.Fields, String>): HashMap<String, String> {
+    private fun mapToCSVMap(m: Map<CsvHeaders.Fields, String>): Map<String, String> {
         val csvMap = HashMap<String, String>()
         for (header in CsvHeaders.Fields.values()) {
             val fieldValue = m[header]

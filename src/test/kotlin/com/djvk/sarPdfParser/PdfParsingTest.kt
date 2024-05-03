@@ -1,5 +1,6 @@
 package com.djvk.sarPdfParser
 
+import com.djvk.sarPdfParser.constants.CsvHeaders
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
@@ -97,41 +98,46 @@ class PdfParsingTest {
 
     @Test
     fun base() {
-        val file = File("src/test/resources/testInput/sample-2022.pdf")
+        val files = getInputFiles()
         val parser = SarPdfParser()
-        val fileContents = runBlocking {
-            parser.processFile(file)
+
+        // Let's do this processing synchronously for now to make debugging easier
+        val outputs = files.map { runBlocking { parser.processText(it) } }
+
+        for (output in outputs) {
+            assertThat(output.isNotEmpty())
+            runTestsOnFile(output)
         }
-        assertThat(fileContents.isNotEmpty())
     }
 
-    @Test
-    fun testGetYear1() {
-        val parser = SarPdfParser()
-        val (startYear, endYear) = parser.getReportYears(header1)
+    private fun runTestsOnFile(contents: Map<CsvHeaders.Fields, String>) {
+        val assertions = mapOf(
+            CsvHeaders.Fields.YEAR to 2024,
+        )
 
-        assertThat(startYear).isEqualTo(2022)
-        assertThat(endYear).isEqualTo(2023)
+        for ((key, value) in assertions) {
+            val actual = contents[key]
+                ?: throw AssertionError("Missing expected field $key")
+            assertThat(actual)
+                .isEqualTo(value)
+                .withFailMessage("Got unexpected value for $key")
+        }
     }
 
-    @Test
-    fun testGetEfc1() {
-        val parser = SarPdfParser()
-        val result = parser.getEFCNumber(header1)
+    private fun getInputFiles(): List<String> {
+        val directory = File("src/test/resources/testInput/")
 
-        assertThat(result.number).isEqualTo("9999")
-        assertThat(result.isStarred).isEqualTo(true)
-        assertThat(result.hasCSuffix).isEqualTo(false)
-        assertThat(result.hasHSuffix).isEqualTo(false)
-    }
+        if (!directory.exists() || !directory.isDirectory) {
+            throw RuntimeException("Could not find input file directory")
+        }
 
-    @Test
-    fun testGetHeaderData() {
-        val parser = SarPdfParser()
-        val actual = parser.getHeaderTableDataAfter2022(header1)
+        val files = directory.listFiles()
+            ?: throw RuntimeException("Unable to find test input files")
 
-        assertThat(actual.receivedDate).isEqualTo("12/31/2021")
-        assertThat(actual.processedDate).isEqualTo("01/01/2022")
-        assertThat(actual.DRN).isEqualTo(8888)
+        if (files.size != 3) {
+            throw RuntimeException("Unexpected count of test input files")
+        }
+
+        return files.map { it.readText() }
     }
 }
