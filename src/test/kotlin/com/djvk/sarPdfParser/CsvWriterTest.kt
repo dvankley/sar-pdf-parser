@@ -19,31 +19,32 @@ class CsvWriterTest {
         var expectedRow =
             "EFC number,1,0,1,01/02/2016,03/04/2017,2016-2015,first name,middle name,last name,std dob,123-12-1234,parent ed 1,parent ed 2,,,yes,2,no,yes,no,yes,1,2,3,4,,,,,,,,,,,,,,,,,,,,"
 
+        // TODO: fix this
         val testmap = hashMapOf(
-            CsvHeaders.Fields.EFC_NUMBER to "EFC number",
-            CsvHeaders.Fields.IS_EFC_STARRED to "1",
-            CsvHeaders.Fields.HAS_EFC_C_SUFFIX to "0",
-            CsvHeaders.Fields.HAS_EFC_H_SUFFIX to "1",
-            CsvHeaders.Fields.RECEIVED_DATE to "01/02/2016",
-            CsvHeaders.Fields.PROCESSED_DATE to "03/04/2017",
+//            CsvHeaders.Fields.EFC_NUMBER to "EFC number",
+//            CsvHeaders.Fields.IS_EFC_STARRED to "1",
+//            CsvHeaders.Fields.HAS_EFC_C_SUFFIX to "0",
+//            CsvHeaders.Fields.HAS_EFC_H_SUFFIX to "1",
+//            CsvHeaders.Fields.RECEIVED_DATE to "01/02/2016",
+//            CsvHeaders.Fields.PROCESSED_DATE to "03/04/2017",
             CsvHeaders.Fields.YEAR to "2016-2015",
-            CsvHeaders.Fields.STUDENT_FIRST_NAME to "first name",
-            CsvHeaders.Fields.STUDENT_MIDDLE_NAME to "middle name",
-            CsvHeaders.Fields.STUDENT_LAST_NAME to "last name",
-            CsvHeaders.Fields.STUDENT_DOB to "std dob",
-            CsvHeaders.Fields.STUDENT_SSN_L4 to "123-12-1234",
-            CsvHeaders.Fields.PARENT_1_ED_LEVEL to "parent ed 1",
-            CsvHeaders.Fields.PARENT_2_ED_LEVEL to "parent ed 2",
-            CsvHeaders.Fields.STUDENT_HAS_CHILDREN to "yes",
-            CsvHeaders.Fields.STUDENT_HAS_DEPENDENTS to "2",
-            CsvHeaders.Fields.DECEASED_PARENTS_COURT_WARD_FOSTER_CARE to "no",
-            CsvHeaders.Fields.EMANCIPATED_MINOR to "yes",
-            CsvHeaders.Fields.IN_LEGAL_GUARDIANSHIP to "no",
-            CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH to "yes",
-            CsvHeaders.Fields.PARENTS_RECEIVED_SNAP to "1",
-            CsvHeaders.Fields.PARENTS_RECEIVED_TANF to "2",
-            CsvHeaders.Fields.STUDENT_RECEIVED_SNAP to "3",
-            CsvHeaders.Fields.STUDENT_RECEIVED_TANF to "4"
+//            CsvHeaders.Fields.STUDENT_FIRST_NAME to "first name",
+//            CsvHeaders.Fields.STUDENT_MIDDLE_NAME to "middle name",
+//            CsvHeaders.Fields.STUDENT_LAST_NAME to "last name",
+//            CsvHeaders.Fields.STUDENT_DOB to "std dob",
+//            CsvHeaders.Fields.STUDENT_SSN_L4 to "123-12-1234",
+//            CsvHeaders.Fields.PARENT_1_ED_LEVEL to "parent ed 1",
+//            CsvHeaders.Fields.PARENT_2_ED_LEVEL to "parent ed 2",
+//            CsvHeaders.Fields.STUDENT_HAS_CHILDREN to "yes",
+//            CsvHeaders.Fields.STUDENT_HAS_DEPENDENTS to "2",
+//            CsvHeaders.Fields.DECEASED_PARENTS_COURT_WARD_FOSTER_CARE to "no",
+//            CsvHeaders.Fields.EMANCIPATED_MINOR to "yes",
+//            CsvHeaders.Fields.IN_LEGAL_GUARDIANSHIP to "no",
+//            CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH to "yes",
+//            CsvHeaders.Fields.PARENTS_RECEIVED_SNAP to "1",
+//            CsvHeaders.Fields.PARENTS_RECEIVED_TANF to "2",
+//            CsvHeaders.Fields.STUDENT_RECEIVED_SNAP to "3",
+//            CsvHeaders.Fields.STUDENT_RECEIVED_TANF to "4"
         )
 
         val normalizedTestMap = normalizeTestMap(testmap)

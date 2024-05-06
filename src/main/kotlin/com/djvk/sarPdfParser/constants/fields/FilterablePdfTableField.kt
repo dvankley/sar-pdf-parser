@@ -1,4 +1,6 @@
-package com.djvk.sarPdfParser.constants
+package com.djvk.sarPdfParser.constants.fields
+
+import com.djvk.sarPdfParser.constants.RegexPattern
 
 /**
  * Interface for a field definition (currently implemented by enum classes) that provides a pattern to match the

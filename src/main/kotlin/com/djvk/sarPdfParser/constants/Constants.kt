@@ -8,7 +8,9 @@ val dashes = PdfNormalizer.groupByAsciiForRegex('-')
 val spaces = PdfNormalizer.groupByAsciiForRegex(' ') + "\n"
 /** There are weird conversion artifacts where "ff" is encoded as some weird single character in
  * the PDF, then gets converted back out into random other characters */
-val doubleEffPattern = "[!\"]|ff"
+val doubleEffPattern = "(?:[!\"\u0000]|ff)"
+/** Same as above, but for fi */
+val fiPattern = "(?:[ﬁ\u0000]|fi)"
 /** Spaces with newlines */
 val swn = spaces + "\n"
 

@@ -1,6 +1,10 @@
 package com.djvk.sarPdfParser
 
 import com.djvk.sarPdfParser.constants.*
+import com.djvk.sarPdfParser.constants.fields.FfelLoanFields
+import com.djvk.sarPdfParser.constants.fields.FilterablePdfTableField
+import com.djvk.sarPdfParser.constants.fields.PerkinsLoanFields
+import com.djvk.sarPdfParser.constants.sections.FileSection
 import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
@@ -16,6 +20,9 @@ class SarPdfParser {
         System.setProperty("sun.java2d.cmm", "sun.java2d.cmm.kcms.KcmsServiceProvider")
     }
 
+    /**
+     * Top level entry point to process an entire PDF file
+     */
     suspend fun processFile(file: File): Map<String, String> {
         println("Processing file ${file.name}")
         PDDocument.load(file).use { document ->
@@ -31,7 +38,12 @@ class SarPdfParser {
         }
     }
 
+    /**
+     * Parses relevant fields out of the text version of a PDF file
+     */
     suspend fun processText(text: String): Map<CsvHeaders.Fields, String> {
+        val fileSections = identifyFileSections(text)
+
         val parsedValues = HashMap<CsvHeaders.Fields, String>()
         validateReportYear(text)
         // Header
@@ -47,6 +59,52 @@ class SarPdfParser {
         parseGeneralTableFields(text, parsedValues)
 
         return parsedValues
+    }
+
+    data class SectionMatch(
+        val headerMatch: MatchResult,
+        val fullSectionIndices: IntRange,
+    )
+
+    fun identifyFileSections(fullText: String): Map<FileSection, SectionMatch> {
+        val sectionHeaders = mutableListOf<Pair<FileSection, MatchResult>>()
+
+        var lastPosition = 0
+        // Iterate over section definitions to find header locations
+        for (section in FileSection.values()) {
+            // Each match should be the next match of the search pattern after the last match
+            val match = section.searchPattern.find(fullText, lastPosition)
+            if (match != null) {
+                sectionHeaders.add(Pair(section, match))
+                lastPosition = match.range.last
+            }
+        }
+
+        val fileSections = mutableMapOf<FileSection, SectionMatch>()
+        // Iterate over header locations to consolidate full section ranges
+        for (i in 0 until sectionHeaders.size) {
+            val (section, match) = sectionHeaders[i]
+            val start = if (i == 0) {
+                0
+            } else {
+                match.range.last
+            }
+            val end = if (i == sectionHeaders.size - 1) {
+                fullText.length - 1
+            } else {
+                val (_, nextMatch) = sectionHeaders[i + 1]
+                nextMatch.range.first
+            }
+
+            fileSections[section] = SectionMatch(match, start..end)
+        }
+
+        for (fileSection in FileSection.values()) {
+            if (!fileSections.containsKey(fileSection)) {
+                throw IllegalArgumentException("Failed to find document section '${fileSection.name}'")
+            }
+        }
+        return fileSections
     }
 
     fun getReportYears(text: String): Pair<Int, Int> {
@@ -83,10 +141,10 @@ class SarPdfParser {
         parsedValues: MutableMap<CsvHeaders.Fields, String>
     ) {
         val efc = getEFCNumber(text)
-        parsedValues[CsvHeaders.Fields.EFC_NUMBER] = efc.number ?: ""
-        parsedValues[CsvHeaders.Fields.IS_EFC_STARRED] = if (efc.isStarred) "1" else "0"
-        parsedValues[CsvHeaders.Fields.HAS_EFC_C_SUFFIX] = if (efc.hasCSuffix) "1" else "0"
-        parsedValues[CsvHeaders.Fields.HAS_EFC_H_SUFFIX] = if (efc.hasHSuffix) "1" else "0"
+//        parsedValues[CsvHeaders.Fields.EFC_NUMBER] = efc.number ?: ""
+//        parsedValues[CsvHeaders.Fields.IS_EFC_STARRED] = if (efc.isStarred) "1" else "0"
+//        parsedValues[CsvHeaders.Fields.HAS_EFC_C_SUFFIX] = if (efc.hasCSuffix) "1" else "0"
+//        parsedValues[CsvHeaders.Fields.HAS_EFC_H_SUFFIX] = if (efc.hasHSuffix) "1" else "0"
         val headerData = getHeaderTableDataAfter2022(text)
         parsedValues[CsvHeaders.Fields.RECEIVED_DATE] = headerData.receivedDate
         parsedValues[CsvHeaders.Fields.PROCESSED_DATE] = headerData.processedDate
@@ -248,22 +306,22 @@ class SarPdfParser {
         rawValue: String,
         parsedValues: Map<CsvHeaders.Fields, String>
     ): String {
-        if (field == CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH) {
-            val newResponse = ResponseValues.fromString(rawValue)
-            val oldResponseString = parsedValues[CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH]?.toUpperCase()?.trim()
-            val oldResponse = ResponseValues.fromString(oldResponseString)
-
-            // YES takes precedence
-            return if (newResponse == ResponseValues.YES || oldResponse == ResponseValues.YES) {
-                ResponseValues.YES.outputValue
-            } else if (newResponse == ResponseValues.NO || oldResponse == ResponseValues.NO) {
-                // If no YES but there are any NOs, let's call it NO
-                ResponseValues.NO.outputValue
-            } else {
-                // If no YES or NO, call it EMPTY
-                ResponseValues.EMPTY.outputValue
-            }
-        }
+//        if (field == CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH) {
+//            val newResponse = ResponseValues.fromString(rawValue)
+//            val oldResponseString = parsedValues[CsvHeaders.Fields.UNACCOMPANIED_HOMELESS_YOUTH]?.toUpperCase()?.trim()
+//            val oldResponse = ResponseValues.fromString(oldResponseString)
+//
+//            // YES takes precedence
+//            return if (newResponse == ResponseValues.YES || oldResponse == ResponseValues.YES) {
+//                ResponseValues.YES.outputValue
+//            } else if (newResponse == ResponseValues.NO || oldResponse == ResponseValues.NO) {
+//                // If no YES but there are any NOs, let's call it NO
+//                ResponseValues.NO.outputValue
+//            } else {
+//                // If no YES or NO, call it EMPTY
+//                ResponseValues.EMPTY.outputValue
+//            }
+//        }
         return rawValue
     }
 
