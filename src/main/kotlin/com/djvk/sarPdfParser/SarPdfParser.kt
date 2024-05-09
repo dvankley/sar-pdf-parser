@@ -5,6 +5,7 @@ import com.djvk.sarPdfParser.constants.fields.FfelLoanFields
 import com.djvk.sarPdfParser.constants.fields.FilterablePdfTableField
 import com.djvk.sarPdfParser.constants.fields.PerkinsLoanFields
 import com.djvk.sarPdfParser.constants.sections.FileSection
+import com.djvk.sarPdfParser.constants.sections.Section
 import com.djvk.sarPdfParser.exceptions.FileProcessingException
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
@@ -42,11 +43,19 @@ class SarPdfParser {
      * Parses relevant fields out of the text version of a PDF file
      */
     suspend fun processText(text: String): Map<CsvHeaders.Fields, String> {
-        val fileSections = identifyFileSections(text)
+        val fileSections = identifyFileSections(text, FileSection.values().toList())
 
         val parsedValues = HashMap<CsvHeaders.Fields, String>()
         validateReportYear(text)
-        // Header
+
+        // region Header
+//        val headerSection = fileSections[FileSection.HEADER]
+//            ?: throw RuntimeException("Missing 'Header' section.")
+//        val headerText = text.substring(headerSection.fullSectionIndices)
+
+        // endregion
+
+
         // "Estimated Federal Student Aid section"
         // Answers
             // Student Section
@@ -62,25 +71,40 @@ class SarPdfParser {
     }
 
     data class SectionMatch(
+        val section: Section,
         val headerMatch: MatchResult,
+        /**
+         * These are the indices of this section within the text of its containing section.
+         *
+         * Note that these indices are NOT global and are relative to the start of the
+         *  containing text.
+         */
         val fullSectionIndices: IntRange,
+        val children: List<SectionMatch>,
     )
 
-    fun identifyFileSections(fullText: String): Map<FileSection, SectionMatch> {
-        val sectionHeaders = mutableListOf<Pair<FileSection, MatchResult>>()
+    fun identifyFileSections(
+        containingText: String,
+        sections: List<Section>,
+    ): List<SectionMatch> {
+        val sectionHeaders = mutableListOf<Pair<Section, MatchResult>>()
 
         var lastPosition = 0
         // Iterate over section definitions to find header locations
-        for (section in FileSection.values()) {
+        for (section in sections) {
             // Each match should be the next match of the search pattern after the last match
-            val match = section.searchPattern.find(fullText, lastPosition)
+            val match = section.searchPattern.find(containingText, lastPosition)
             if (match != null) {
                 sectionHeaders.add(Pair(section, match))
                 lastPosition = match.range.last
+            } else {
+                if (section.required) {
+                    throw IllegalArgumentException("Missing expected section ${section.name}")
+                }
             }
         }
 
-        val fileSections = mutableMapOf<FileSection, SectionMatch>()
+        val fileSections = mutableListOf<SectionMatch>()
         // Iterate over header locations to consolidate full section ranges
         for (i in 0 until sectionHeaders.size) {
             val (section, match) = sectionHeaders[i]
@@ -90,20 +114,28 @@ class SarPdfParser {
                 match.range.last
             }
             val end = if (i == sectionHeaders.size - 1) {
-                fullText.length - 1
+                containingText.length - 1
             } else {
                 val (_, nextMatch) = sectionHeaders[i + 1]
                 nextMatch.range.first
             }
 
-            fileSections[section] = SectionMatch(match, start..end)
+            val children = section.children ?: listOf()
+
+            val childMatches = if (children.isNotEmpty()) {
+                // If the section has children
+                identifyFileSections(
+                    containingText.substring(start, end),
+                    children,
+                )
+            } else {
+                // If the section's children are null or empty
+                listOf()
+            }
+
+            fileSections.add(SectionMatch(section, match, start..end, childMatches))
         }
 
-        for (fileSection in FileSection.values()) {
-            if (!fileSections.containsKey(fileSection)) {
-                throw IllegalArgumentException("Failed to find document section '${fileSection.name}'")
-            }
-        }
         return fileSections
     }
 
