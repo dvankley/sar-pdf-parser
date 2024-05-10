@@ -43,19 +43,22 @@ object CsvHeaders {
      * @property csvFieldName Name of CSV column this field is output to
      * @property section The section that this field is contained within.
      * @property tableMatchPatterns The regex patterns to use to search for table label matches.
-     * This pattern should match all the terms of the target label content within capture groups.
-     * Other unknown values may be matched by the pattern, but they should NOT be in capture groups. This is because
-     *  all capture group text will later be removed to allow more effective matching of interleaved values.
-     * Matching any members of this set is considered a match.
+     * Should not contain any capture groups.
+     * If [matchAnyYes] is false (the default), the value from the first match from this group
+     *  will be used. If [matchAnyYes] is true, any "Yes" values matched by these patterns will
+     *  result in the output being "Yes", otherwise it will be "No" (logical OR).
      * Null if this field isn't a PDF table field. Content matching logic for non-table fields
-     *  (i.e. for YEAR) is implemented manually.
+     *  (i.e. for [Fields.YEAR]) is implemented manually on a case-by-case basis.
+     * @property matchAnyYes Changes the behavior of [tableMatchPatterns], see comment above for
+     *  more details.
      */
     enum class Fields(
         val docType: DocType,
         val csvFieldName: String,
         val dataType: DataTypes,
         val section: Section?,
-        val tableMatchPatterns: Set<RegexPattern>? = null
+        val tableMatchPatterns: Set<RegexPattern>? = null,
+        val matchAnyYes: Boolean = false,
     ) {
         YEAR(
             DocType.SAR,
@@ -86,45 +89,49 @@ object CsvHeaders {
             "Student First Name",
             DataTypes.STRING,
             StudentSubsection.PERSONAL_IDENTIFIERS,
-            setOf("""(First)${spaces}+(Name)""")
+            setOf("""First[${spaces}]+Name"""),
         ),
         STUDENT_MIDDLE_NAME(
             DocType.SAR,
             "Student Middle Name",
             DataTypes.STRING,
             StudentSubsection.PERSONAL_IDENTIFIERS,
-            setOf("3. Student’s  Middle  Initial")
+            setOf("""Middle[${spaces}]+Name"""),
         ),
         STUDENT_LAST_NAME(
-            DocType.SAR, "Student Last Name", DataTypes.STRING, StudentSubsection.PERSONAL_IDENTIFIERS, setOf(
-                "1. Student’s  Last  Name",
-            )
+            DocType.SAR,
+            "Student Last Name",
+            DataTypes.STRING,
+            StudentSubsection.PERSONAL_IDENTIFIERS,
+            setOf("""Last[${spaces}]+Name"""),
         ),
         STUDENT_DOB(
-            DocType.SAR, "Student Date of Birth", DataTypes.STRING, StudentSubsection.PERSONAL_IDENTIFIERS, setOf(
-                "9. Student's  Date  of  Birth",
-            )
+            DocType.SAR,
+            "Student Date of Birth",
+            DataTypes.STRING,
+            StudentSubsection.PERSONAL_IDENTIFIERS,
+            setOf("""Date[${spaces}]+of[${spaces}]+Birth"""),
         ),
         STUDENT_SSN_L4(
             DocType.SAR,
             "Social Security Number Last 4 Digits",
             DataTypes.STRING,
             StudentSubsection.PERSONAL_IDENTIFIERS,
-            setOf(
-                "8. Student's  Social  Security  Number",
-            )
+            setOf("""Social[${spaces}]+Security[${spaces}]+Number"""),
         ),
         STUDENT_EMAIL(
-            DocType.SAR, "Student Email", DataTypes.STRING, StudentSubsection.PERSONAL_IDENTIFIERS
+            DocType.SAR,
+            "Student Email",
+            DataTypes.STRING,
+            StudentSubsection.PERSONAL_IDENTIFIERS,
+            setOf("""Email"""),
         ),
         STUDENT_HAS_DEPENDENTS(
             DocType.SAR,
             "Does student have other non-child/non-spouse dependents?",
             DataTypes.BOOLEAN,
             StudentSubsection.PERSONAL_CIRCUMSTANCES,
-            setOf(
-                "51. Does the student support other dependents",
-            )
+            setOf("""Has[${spaces}]+Dependents"""),
         ),
 
         // Logical OR of several fields
@@ -133,6 +140,13 @@ object CsvHeaders {
             "Orphan, State Custody, or Emancipated",
             DataTypes.BOOLEAN,
             StudentSubsection.PERSONAL_CIRCUMSTANCES,
+            setOf(
+                """Orphaned[${spaces}]+After[${spaces}]+Age[${spaces}]+13""",
+                """Ward[${spaces}]+of[${spaces}]+the[${spaces}]+Court[${spaces}]+After[${spaces}]+Age[${spaces}]+13""",
+                """Foster[${spaces}]+Care[${spaces}]+After[${spaces}]+Age[${spaces}]+13""",
+                """Was[${spaces}]+or[${spaces}]+Is[${spaces}]+a[${spaces}]+Legally[${spaces}]+Emancipated[${spaces}]+Minor""",
+            ),
+            true,
         ),
         LEGAL_GUARDIAN_OTHER_THAN_PARENT(
             DocType.SAR,

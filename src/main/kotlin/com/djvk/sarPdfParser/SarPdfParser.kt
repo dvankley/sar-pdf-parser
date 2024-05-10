@@ -1,9 +1,7 @@
 package com.djvk.sarPdfParser
 
 import com.djvk.sarPdfParser.constants.*
-import com.djvk.sarPdfParser.constants.fields.FfelLoanFields
 import com.djvk.sarPdfParser.constants.fields.FilterablePdfTableField
-import com.djvk.sarPdfParser.constants.fields.PerkinsLoanFields
 import com.djvk.sarPdfParser.constants.sections.FileSection
 import com.djvk.sarPdfParser.constants.sections.Section
 import com.djvk.sarPdfParser.exceptions.FileProcessingException
@@ -77,18 +75,55 @@ class SarPdfParser {
             ?: listOf()
         val output = mutableMapOf<CsvHeaders.Fields, CsvOutputValue>()
         // Iterate over all field definitions that should be in this section
-        for (field in fields) {
+        fieldIteration@ for (field in fields) {
             if (field.tableMatchPatterns?.isNotEmpty() == true) {
+                var haveAnyMatched = false
                 // Table field
-                val labelMatches = findTableLabelPositions(sectionMatch.text, field.tableMatchPatterns)
-                val valueMatches = findTableInterleavedValues(sectionMatch.text, tableValueRegex, labelMatches)
+                /**
+                 * I'm shelving the interleaved value handling for now because I don't see any cases of it
+                 *  in the sample data.
+                 * I'll revisit it if it shows up again.
+                 */
+                for (tablePattern in field.tableMatchPatterns) {
+                    val regex = """$tablePattern[$spaces]+$tableArrowSeparator[$spaces]+(.+)$""".toRegex(RegexOption.MULTILINE)
+                    val match = regex.find(sectionMatch.text)
+                    if (match != null) {
+                        haveAnyMatched = true
+                        val value = match.groupValues[1].trim()
+                        if (field.matchAnyYes) {
+                            // Special case; logical OR.
+                            if (value.lowercase(Locale.getDefault()) == "yes") {
+                                output[field] = "Yes"
+                                continue@fieldIteration
+                            }
 
-                if (valueMatches.size != 1) {
-                    throw RuntimeException("Unexpected match count ${valueMatches.size} for table field ${field.name}")
+
+                        } else {
+                            // Default behavior, use the value from the first match
+                            output[field] = match.groupValues[1]
+                            continue@fieldIteration
+                        }
+                    }
                 }
+                if (field.matchAnyYes && haveAnyMatched) {
+                    /**
+                     * In this case, we're doing the logical OR special case, we've matched at least
+                     *  one label, but we haven't found any "yes"es.
+                     * This is fine, just return "No."
+                     */
 
-                // TODO: sort out field table parsing
-                output[field] = valueMatches.first().first().groupValues.first()
+                    output[field] = "No"
+                    continue@fieldIteration
+                }
+                // Otherwise we haven't found any valid matches, so that's a paddlin'
+                throw RuntimeException("Unable to find table field ${field.name}")
+//                val labelMatches = findTableLabelPositions(sectionMatch.text, field.tableMatchPatterns)
+//                val valueMatches = findTableInterleavedValues(sectionMatch.text, tableValueRegex, labelMatches)
+//
+//                if (valueMatches.size != 1) {
+//                    throw RuntimeException("Unexpected match count ${valueMatches.size} for table field ${field.name}")
+//                }
+
 
 //                ffelValueMatches.forEachIndexed { ffelIndex, ffelValueMatch ->
 //                    val loanField = FfelLoanFields.values()[ffelIndex]
@@ -109,6 +144,7 @@ class SarPdfParser {
                             ?: throw RuntimeException("Unable to parse form year")
                         output[field] = match.groupValues[1]
                     }
+
                     CsvHeaders.Fields.RECEIVED_DATE -> {
                         val matches = textDateRegex.findAll(sectionMatch.text).toList()
                         if (matches.size != 2) {
@@ -116,6 +152,7 @@ class SarPdfParser {
                         }
                         output[field] = matches[0].groupValues[0]
                     }
+
                     CsvHeaders.Fields.PROCESSED_DATE -> {
                         // This is a bit wasteful as it duplicates the previous case, but meh
                         val matches = textDateRegex.findAll(sectionMatch.text).toList()
@@ -124,14 +161,18 @@ class SarPdfParser {
                         }
                         output[field] = matches[1].groupValues[0]
                     }
+
                     CsvHeaders.Fields.SAI -> {
-                        val variants1And2Regex = """correct[${spaces}]+your[${spaces}]+FAFSA[${spaces}]+information\.[${spaces}]+(-?\d{1,4})""".toRegex()
-                            val variant3Regex = """by[${spaces}]+your[${spaces}]+school[${spaces}]+to[${spaces}]+determine[${spaces}]+(-?\d{1,4})""".toRegex()
+                        val variants1And2Regex =
+                            """correct[${spaces}]+your[${spaces}]+FAFSA[${spaces}]+information\.[${spaces}]+(-?\d{1,4})""".toRegex()
+                        val variant3Regex =
+                            """by[${spaces}]+your[${spaces}]+school[${spaces}]+to[${spaces}]+determine[${spaces}]+(-?\d{1,4})""".toRegex()
                         val match = variants1And2Regex.find(sectionMatch.text)
                             ?: variant3Regex.find(sectionMatch.text)
                             ?: throw RuntimeException("Unable to parse SAI")
                         output[field] = match.groupValues[1]
                     }
+
                     else -> throw IllegalArgumentException("Unexpected non-table field $field")
                 }
             }
@@ -209,13 +250,15 @@ class SarPdfParser {
                 listOf()
             }
 
-            fileSections.add(SectionMatch(
-                section,
-                match,
-                containingText.substring(start, end),
-                start..end,
-                childMatches,
-            ))
+            fileSections.add(
+                SectionMatch(
+                    section,
+                    match,
+                    containingText.substring(start, end),
+                    start..end,
+                    childMatches,
+                )
+            )
         }
 
         return fileSections
