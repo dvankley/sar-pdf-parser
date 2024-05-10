@@ -14,4 +14,10 @@ val fiPattern = "(?:[ﬁ\u0000]|fi)"
 /** Spaces with newlines */
 val swn = spaces + "\n"
 
+val textDateRegex = """\w{3,7}\.?[${spaces}]+\d{1,2},[${spaces}]+\d{4}""".toRegex()
+
+val tableArrowSeparator = "\uF061"
+val tableValueRegex = """[${spaces}]+${tableArrowSeparator}[${spaces}]+(.+?)[${spaces}]*\n""".toRegex()
+
 typealias RegexPattern = String
+typealias CsvOutputValue = String

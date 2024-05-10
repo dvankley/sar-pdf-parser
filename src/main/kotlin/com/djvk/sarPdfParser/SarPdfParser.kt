@@ -42,11 +42,14 @@ class SarPdfParser {
     /**
      * Parses relevant fields out of the text version of a PDF file
      */
-    suspend fun processText(text: String): Map<CsvHeaders.Fields, String> {
+    suspend fun processText(text: String): Map<CsvHeaders.Fields, CsvOutputValue> {
         val fileSections = identifyFileSections(text, FileSection.values().toList())
 
-        val parsedValues = HashMap<CsvHeaders.Fields, String>()
-        validateReportYear(text)
+        val parsedValues = HashMap<CsvHeaders.Fields, CsvOutputValue>()
+//        validateReportYear(text)
+        for (fileSection in fileSections) {
+            parsedValues += processSection(fileSection)
+        }
 
         // region Header
 //        val headerSection = fileSections[FileSection.HEADER]
@@ -58,21 +61,94 @@ class SarPdfParser {
 
         // "Estimated Federal Student Aid section"
         // Answers
-            // Student Section
-                // Personal Identifiers
+        // Student Section
+        // Personal Identifiers
 
 
-
-        parseLoansTablesFields(text, parsedValues)
-        parseGlobalFields(text, parsedValues)
-        parseGeneralTableFields(text, parsedValues)
+//        parseLoansTablesFields(text, parsedValues)
+//        parseGlobalFields(text, parsedValues)
+//        parseGeneralTableFields(text, parsedValues)
 
         return parsedValues
+    }
+
+    fun processSection(sectionMatch: SectionMatch): Map<CsvHeaders.Fields, CsvOutputValue> {
+        val fields = CsvHeaders.fieldsBySection[sectionMatch.section]
+            ?: listOf()
+        val output = mutableMapOf<CsvHeaders.Fields, CsvOutputValue>()
+        // Iterate over all field definitions that should be in this section
+        for (field in fields) {
+            if (field.tableMatchPatterns?.isNotEmpty() == true) {
+                // Table field
+                val labelMatches = findTableLabelPositions(sectionMatch.text, field.tableMatchPatterns)
+                val valueMatches = findTableInterleavedValues(sectionMatch.text, tableValueRegex, labelMatches)
+
+                if (valueMatches.size != 1) {
+                    throw RuntimeException("Unexpected match count ${valueMatches.size} for table field ${field.name}")
+                }
+
+                // TODO: sort out field table parsing
+                output[field] = valueMatches.first().first().groupValues.first()
+
+//                ffelValueMatches.forEachIndexed { ffelIndex, ffelValueMatch ->
+//                    val loanField = FfelLoanFields.values()[ffelIndex]
+//                    if (ffelValueMatch.size != 3) {
+//                        throw IllegalArgumentException("Expected 3 FFEL value matches, found ${ffelValueMatch.size}")
+//                    }
+//                    parsedValues[loanField.balanceField] = ffelValueMatch[0].groupValues[1]
+//                    parsedValues[loanField.remainingField] = ffelValueMatch[1].groupValues[1]
+//                    parsedValues[loanField.totalField] = ffelValueMatch[2].groupValues[1]
+//                }
+
+            } else {
+                // Fields that need custom handling
+                when (field) {
+                    CsvHeaders.Fields.YEAR -> {
+                        val yearRegex = """FORM[${spaces}]+(\d{4})[${dashes}][${spaces}]*\d{2}""".toRegex()
+                        val match = yearRegex.find(sectionMatch.text)
+                            ?: throw RuntimeException("Unable to parse form year")
+                        output[field] = match.groupValues[1]
+                    }
+                    CsvHeaders.Fields.RECEIVED_DATE -> {
+                        val matches = textDateRegex.findAll(sectionMatch.text).toList()
+                        if (matches.size != 2) {
+                            throw RuntimeException("Unable to parse received and processed date")
+                        }
+                        output[field] = matches[0].groupValues[0]
+                    }
+                    CsvHeaders.Fields.PROCESSED_DATE -> {
+                        // This is a bit wasteful as it duplicates the previous case, but meh
+                        val matches = textDateRegex.findAll(sectionMatch.text).toList()
+                        if (matches.size != 2) {
+                            throw RuntimeException("Unable to parse received and processed date")
+                        }
+                        output[field] = matches[1].groupValues[0]
+                    }
+                    CsvHeaders.Fields.SAI -> {
+                        val variants1And2Regex = """correct[${spaces}]+your[${spaces}]+FAFSA[${spaces}]+information\.[${spaces}]+(-?\d{1,4})""".toRegex()
+                            val variant3Regex = """by[${spaces}]+your[${spaces}]+school[${spaces}]+to[${spaces}]+determine[${spaces}]+(-?\d{1,4})""".toRegex()
+                        val match = variants1And2Regex.find(sectionMatch.text)
+                            ?: variant3Regex.find(sectionMatch.text)
+                            ?: throw RuntimeException("Unable to parse SAI")
+                        output[field] = match.groupValues[1]
+                    }
+                    else -> throw IllegalArgumentException("Unexpected non-table field $field")
+                }
+            }
+        }
+
+        // Integrate output from child sections
+        for (child in sectionMatch.children) {
+            output += processSection(child)
+        }
+
+        return output
     }
 
     data class SectionMatch(
         val section: Section,
         val headerMatch: MatchResult,
+        val text: String,
         /**
          * These are the indices of this section within the text of its containing section.
          *
@@ -133,7 +209,13 @@ class SarPdfParser {
                 listOf()
             }
 
-            fileSections.add(SectionMatch(section, match, start..end, childMatches))
+            fileSections.add(SectionMatch(
+                section,
+                match,
+                containingText.substring(start, end),
+                start..end,
+                childMatches,
+            ))
         }
 
         return fileSections
@@ -294,7 +376,7 @@ class SarPdfParser {
 
         // Subtract the table fields we've found from all possible table fields
         val fieldsToReview = CsvHeaders.Fields.values()
-            .filter { it.pdfTableFieldNames != null }
+            .filter { it.tableMatchPatterns != null }
             .minus(fieldsFound)
 
         parsedValues[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
@@ -385,30 +467,30 @@ class SarPdfParser {
         )
 
         // Iterate over each FFEL field and try to find its data in the search text
-        val ffelLabelMatches = findTableLabelPositions(ffelText, FfelLoanFields.values().toList())
-        val ffelValueMatches = findTableInterleavedValues(ffelText, loanValueRegex, ffelLabelMatches)
-
-        ffelValueMatches.forEachIndexed { ffelIndex, ffelValueMatch ->
-            val loanField = FfelLoanFields.values()[ffelIndex]
-            if (ffelValueMatch.size != 3) {
-                throw IllegalArgumentException("Expected 3 FFEL value matches, found ${ffelValueMatch.size}")
-            }
-            parsedValues[loanField.balanceField] = ffelValueMatch[0].groupValues[1]
-            parsedValues[loanField.remainingField] = ffelValueMatch[1].groupValues[1]
-            parsedValues[loanField.totalField] = ffelValueMatch[2].groupValues[1]
-        }
-
-        // And again for Perkins
-        val perkinsLabelMatches = findTableLabelPositions(perkinsText, PerkinsLoanFields.values().toList())
-        val perkinsValueMatches = findTableInterleavedValues(perkinsText, loanValueRegex, perkinsLabelMatches)
-
-        perkinsValueMatches.forEachIndexed { perkinsIndex, perkinsValueMatch ->
-            val loanField = PerkinsLoanFields.values()[perkinsIndex]
-            if (perkinsValueMatch.size != 1) {
-                throw IllegalArgumentException("Expected 1 Perkins value matches, found ${perkinsValueMatch.size}")
-            }
-            parsedValues[loanField.field] = perkinsValueMatch[0].groupValues[1]
-        }
+//        val ffelLabelMatches = findTableLabelPositions(ffelText, FfelLoanFields.values().toList())
+//        val ffelValueMatches = findTableInterleavedValues(ffelText, loanValueRegex, ffelLabelMatches)
+//
+//        ffelValueMatches.forEachIndexed { ffelIndex, ffelValueMatch ->
+//            val loanField = FfelLoanFields.values()[ffelIndex]
+//            if (ffelValueMatch.size != 3) {
+//                throw IllegalArgumentException("Expected 3 FFEL value matches, found ${ffelValueMatch.size}")
+//            }
+//            parsedValues[loanField.balanceField] = ffelValueMatch[0].groupValues[1]
+//            parsedValues[loanField.remainingField] = ffelValueMatch[1].groupValues[1]
+//            parsedValues[loanField.totalField] = ffelValueMatch[2].groupValues[1]
+//        }
+//
+//        // And again for Perkins
+//        val perkinsLabelMatches = findTableLabelPositions(perkinsText, PerkinsLoanFields.values().toList())
+//        val perkinsValueMatches = findTableInterleavedValues(perkinsText, loanValueRegex, perkinsLabelMatches)
+//
+//        perkinsValueMatches.forEachIndexed { perkinsIndex, perkinsValueMatch ->
+//            val loanField = PerkinsLoanFields.values()[perkinsIndex]
+//            if (perkinsValueMatch.size != 1) {
+//                throw IllegalArgumentException("Expected 1 Perkins value matches, found ${perkinsValueMatch.size}")
+//            }
+//            parsedValues[loanField.field] = perkinsValueMatch[0].groupValues[1]
+//        }
     }
 
     /**
@@ -420,15 +502,14 @@ class SarPdfParser {
      *
      * This output of this function is intended to be used with [findTableInterleavedValues]
      */
-    fun findTableLabelPositions(text: String, labelPatterns: List<FilterablePdfTableField>): List<MatchResult> {
+    fun findTableLabelPositions(text: String, labelPatterns: Set<RegexPattern>): List<MatchResult> {
         val labelMatches = mutableListOf<MatchResult>()
-        for (label in labelPatterns) {
+        for (pattern in labelPatterns) {
             val searchStartIndex = if (labelMatches.isEmpty()) 0 else labelMatches.last().range.last + 1
             labelMatches.add(
-                label.pdfLabelPattern
-                    .toRegex(setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
+                pattern.toRegex(setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
                     .find(text, searchStartIndex)
-                    ?: throw IllegalArgumentException("Failed to find expected table label $label")
+                    ?: throw IllegalArgumentException("Failed to find expected table label $pattern")
             )
         }
         return labelMatches
