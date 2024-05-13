@@ -41,7 +41,9 @@ class SarPdfParser {
      * Parses relevant fields out of the text version of a PDF file
      */
     suspend fun processText(text: String): Map<CsvHeaders.Fields, CsvOutputValue> {
-        val fileSections = identifyFileSections(text, FileSection.values().toList())
+        val sanitizedText = sanitizeText(text)
+
+        val fileSections = identifyFileSections(sanitizedText, FileSection.values().toList())
 
         val parsedValues = HashMap<CsvHeaders.Fields, CsvOutputValue>()
 //        validateReportYear(text)
@@ -70,6 +72,16 @@ class SarPdfParser {
         return parsedValues
     }
 
+    /**
+     * Cleans up known artifacts in the text to improve reliability of the parsing code.
+     */
+    fun sanitizeText(input: String): String {
+        val footerRegex1 = """https://studentaid\.gov/fafsa-apply.*$\n.*\n.*""".toRegex(RegexOption.MULTILINE)
+        val out = footerRegex1.replace(input, "")
+
+        return out
+    }
+
     fun processSection(sectionMatch: SectionMatch): Map<CsvHeaders.Fields, CsvOutputValue> {
         val fields = CsvHeaders.fieldsBySection[sectionMatch.section]
             ?: listOf()
@@ -85,7 +97,8 @@ class SarPdfParser {
                  * I'll revisit it if it shows up again.
                  */
                 for (tablePattern in field.tableMatchPatterns) {
-                    val regex = """$tablePattern[$spaces]+$tableArrowSeparator[$spaces]+(.+)$""".toRegex(RegexOption.MULTILINE)
+                    val regex = """$tablePattern[$spaces]+$tableArrowSeparator[$spaces]+(.+)$"""
+                        .toRegex(RegexOption.MULTILINE)
                     val match = regex.find(sectionMatch.text)
                     if (match != null) {
                         haveAnyMatched = true
@@ -100,7 +113,7 @@ class SarPdfParser {
 
                         } else {
                             // Default behavior, use the value from the first match
-                            output[field] = match.groupValues[1]
+                            output[field] = value
                             continue@fieldIteration
                         }
                     }

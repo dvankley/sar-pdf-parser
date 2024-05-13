@@ -138,6 +138,8 @@ class PdfParsingTest {
             throw RuntimeException("Unexpected count of test input files")
         }
 
-        return files.map { it.readText() }
+        return files
+//            .filter { it.name == "variant2.txt" }
+            .map { it.readText() }
     }
 }

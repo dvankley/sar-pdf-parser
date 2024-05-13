@@ -204,7 +204,7 @@ object CsvHeaders {
             "Any Family Member Received Earned Income Credit (EIC)",
             DataTypes.BOOLEAN,
             ParentSubsection.FINANCIALS,
-            setOf("""Any[${spaces}]+Family[${spaces}]+Member[${spaces}]+Received[${spaces}]+Earned[${spaces}]+Income[${spaces}]+Credit[${spaces}]+(EIC)"""),
+            setOf("""Any[${spaces}]+Family[${spaces}]+Member[${spaces}]+Received[${spaces}]+Earned[${spaces}]+Income[${spaces}]+Credit[${spaces}]+\(EIC\)"""),
         ),
         FAMILY_RECEIVED_HOUSING_ASSISTANCE(
             DocType.SAR,
