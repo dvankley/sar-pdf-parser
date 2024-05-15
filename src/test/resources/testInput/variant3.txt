@@ -960,7 +960,7 @@
                Any Family Member Received Temporary Assistance  for  Needy  Families  (TANF)          No                                                
                                                                                                                                                          
                                                                                                                                                          
-               Any Family Member Received Special  Supplemental  Nutrition  Program  for  Women,      No                                                
+               Any Family Member Received Special  Supplemental  Nutrition  Program  for  Women,      Yes
                Infants,  and  Children  (WIC)                                                                                                            
                                                                                                                                                          
                                                                                                                                                          

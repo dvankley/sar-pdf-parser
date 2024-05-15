@@ -5,7 +5,7 @@ import kotlinx.coroutines.*
 import java.io.File
 import kotlin.coroutines.EmptyCoroutineContext
 
-class PdfReader(private val files: Array<File>) {
+class PdfReader(private val files: List<File>) {
     fun startProcessing() {
         val parser = SarPdfParser()
         val primaryCsvWriter = CsvWriter("outfile.csv", CsvHeaders.DocType.SAR)

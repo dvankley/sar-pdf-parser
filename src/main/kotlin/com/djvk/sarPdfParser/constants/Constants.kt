@@ -17,7 +17,7 @@ val swn = spaces + "\n"
 val textDateRegex = """\w{3,7}\.?[${spaces}]+\d{1,2},[${spaces}]+\d{4}""".toRegex()
 
 val tableArrowSeparator = "\uF061"
-val tableValueRegex = """[${spaces}]+${tableArrowSeparator}[${spaces}]+(.+?)[${spaces}]*\n""".toRegex()
+val tableValueRegex = """[${spaces}]+${tableArrowSeparator}[${spaces}]+(.+?)[${spaces}]*$""".toRegex()
 
 typealias RegexPattern = String
 typealias CsvOutputValue = String

@@ -1243,7 +1243,7 @@
                      Any  Family  Member    Received   Special   Supplemental    Nutrition  Program    for Women,    Infants, and  Children  (WIC)                                                                
                                                                                                                                                                                                                   
                                                                                                                                                                                                                   
-                         No                                                                                                                                                                                      
+                         Yes
                                                                                                                                                                                                                   
                                                                                                                                                                                                                   
                      Joint Tax  Return  for 2022    with Current   Spouse                                                                                                                                         
