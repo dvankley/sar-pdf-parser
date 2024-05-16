@@ -75,7 +75,9 @@ class SarPdfParser {
                     if (field.handleInterleaved) {
                         matchValue = extractInterleavedValues(sectionMatch.text, tablePattern)
                     } else {
-                        val regex = """$tablePattern[$spaces]+$tableArrowSeparator[$spaces]+(.+)$"""
+                        // TODO: figure out how to avoid overrun of this regex into the next field
+                        val labelPattern = tablePattern.joinToString("[$spaces]+")
+                        val regex = """$labelPattern[$spaces]+$tableArrowSeparator[$spacesWithoutNewline]+(.+)$"""
                             .toRegex(RegexOption.MULTILINE)
                         matchValue = regex.find(sectionMatch.text)?.groupValues?.get(1)?.trim()
                     }
@@ -89,7 +91,7 @@ class SarPdfParser {
                             }
                         } else {
                             // Default behavior, use the value from the first match
-                            output[field] = matchValue
+                            output[field] = postProcessValue(matchValue)
                             continue@fieldIteration
                         }
                     }
@@ -113,7 +115,7 @@ class SarPdfParser {
                         val yearRegex = """FORM[${spaces}]+(\d{4})[${dashes}][${spaces}]*\d{2}""".toRegex()
                         val match = yearRegex.find(sectionMatch.text)
                             ?: throw RuntimeException("Unable to parse form year")
-                        output[field] = match.groupValues[1]
+                        output[field] = postProcessValue(match.groupValues[1])
                     }
 
                     CsvHeaders.Fields.RECEIVED_DATE -> {
@@ -121,7 +123,7 @@ class SarPdfParser {
                         if (matches.size != 2) {
                             throw RuntimeException("Unable to parse received and processed date")
                         }
-                        output[field] = matches[0].groupValues[0]
+                        output[field] = postProcessValue(matches[0].groupValues[0])
                     }
 
                     CsvHeaders.Fields.PROCESSED_DATE -> {
@@ -130,7 +132,7 @@ class SarPdfParser {
                         if (matches.size != 2) {
                             throw RuntimeException("Unable to parse received and processed date")
                         }
-                        output[field] = matches[1].groupValues[0]
+                        output[field] = postProcessValue(matches[1].groupValues[0])
                     }
 
                     CsvHeaders.Fields.SAI -> {
@@ -141,7 +143,7 @@ class SarPdfParser {
                         val match = variants1And2Regex.find(sectionMatch.text)
                             ?: variant3Regex.find(sectionMatch.text)
                             ?: throw RuntimeException("Unable to parse SAI")
-                        output[field] = match.groupValues[1]
+                        output[field] = postProcessValue(match.groupValues[1])
                     }
 
                     else -> throw IllegalArgumentException("Unexpected non-table field $field")
@@ -170,6 +172,13 @@ class SarPdfParser {
         output[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
 
         return output
+    }
+
+    private fun postProcessValue(value: String): String {
+        return value
+            .trim()
+            // Replace repeated spaces with a single space
+            .replace("""[${spaces}]{2,}""".toRegex(), " ")
     }
 
     data class SectionMatch(
