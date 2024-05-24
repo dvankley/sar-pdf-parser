@@ -41,13 +41,26 @@ class SarPdfParser {
 
         val fileSections = identifyFileSections(sanitizedText, FileSection.values().toList())
 
-        val parsedValues = HashMap<CsvHeaders.Fields, CsvOutputValue>()
-//        validateReportYear(text)
+        val output = HashMap<CsvHeaders.Fields, CsvOutputValue>()
         for (fileSection in fileSections) {
-            parsedValues += processSection(fileSection)
+            output += processSection(fileSection)
         }
 
-        return parsedValues
+        val allRequiredFieldsFilled = CsvHeaders.requiredTableFields.all { requiredField ->
+            val value = output[requiredField] ?: return@all false
+            value.isNotBlank()
+        }
+        if (!allRequiredFieldsFilled) {
+            throw Exception("File did not contain student's first name, last name, DOB, and last 4 of SSN")
+        }
+
+        // Subtract the table fields we've found from all possible table fields
+        val fieldsToReview = CsvHeaders.Fields.values()
+            .filter { it.tableMatchPatterns != null }
+            .minus(output.keys)
+        output[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
+
+        return output
     }
 
     /**
@@ -71,15 +84,10 @@ class SarPdfParser {
                 // Table field
                 // Iterate over all possible patterns for this field
                 for (tablePattern in field.tableMatchPatterns) {
-                    val matchValue: String?
-                    if (field.handleInterleaved) {
-                        matchValue = extractInterleavedValues(sectionMatch.text, tablePattern)
+                    val matchValue = if (field.handleInterleaved) {
+                        extractInterleavedValues(sectionMatch.text, tablePattern)
                     } else {
-                        // TODO: figure out how to avoid overrun of this regex into the next field
-                        val labelPattern = tablePattern.joinToString("[$spaces]+")
-                        val regex = """$labelPattern[$spaces]+$tableArrowSeparator[$spacesWithoutNewline]+(.+)$"""
-                            .toRegex(RegexOption.MULTILINE)
-                        matchValue = regex.find(sectionMatch.text)?.groupValues?.get(1)?.trim()
+                        extractStandardTableValues(sectionMatch.text, tablePattern)
                     }
                     if (matchValue != null) {
                         haveAnyMatched = true
@@ -155,21 +163,6 @@ class SarPdfParser {
         for (child in sectionMatch.children) {
             output += processSection(child)
         }
-
-        val allRequiredFieldsFilled = CsvHeaders.requiredTableFields.all { requiredField ->
-            val value = output[requiredField] ?: return@all false
-            value.isNotBlank()
-        }
-        // TODO: add this back in
-//        if (!allRequiredFieldsFilled) {
-//            throw Exception("File did not contain student's first name, last name, DOB, and last 4 of SSN")
-//        }
-
-        // Subtract the table fields we've found from all possible table fields
-        val fieldsToReview = CsvHeaders.Fields.values()
-            .filter { it.tableMatchPatterns != null }
-            .minus(output.keys)
-        output[CsvHeaders.Fields.FIELDS_TO_REVIEW] = fieldsToReview.joinToString(", ") { it.csvFieldName }
 
         return output
     }
@@ -288,11 +281,21 @@ class SarPdfParser {
         }
     }
 
+    fun extractStandardTableValues(text: String, labelPatterns: List<RegexPattern>): String? {
+        val labelPattern = labelPatterns.joinToString("[$spaces]+")
+        val regex = (labelPattern + standardTableValuePattern)
+            .toRegex(RegexOption.MULTILINE)
+        val matchGroupValues = regex.find(text)?.groupValues
+            ?: return null
+        return (matchGroupValues[1].trim() + " " + matchGroupValues[2].trim()).trim()
+    }
+
+
     fun extractInterleavedValues(text: String, labelPatterns: List<RegexPattern>): String {
         val workingLabelPatterns = labelPatterns.toMutableList()
 
         while (workingLabelPatterns.isNotEmpty()) {
-            val pattern = (workingLabelPatterns.joinToString("""[$spaces]+""") + tableValueRegex)
+            val pattern = (workingLabelPatterns.joinToString("""[$spaces]+""") + interleavedTableValueRegex)
                 .toRegex(RegexOption.MULTILINE)
             val matches = pattern.findAll(text).toList()
             if (matches.isEmpty()) {

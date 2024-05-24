@@ -222,7 +222,7 @@
                Su!x                                                                                                                                     
                                                                                                                                                          
                                                                                                                                                          
-               Date of  Birth                                                                         1/1/2000                                        
+               Date of  Birth                                                                         01/01/2000
                                                                                                                                                          
                                                                                                                                                          
                Social  Security  Number                                                               •••-••-1234                                       
@@ -917,7 +917,7 @@
                                                                                                                                                          
                                                                                                                                                          
                                                                                                                                                          
-               Current  Marital  Status                                                               Single  (never  married)                          
+               Current  Marital  Status                                                               Married  (not separated)
                                                                                                                                                          
                                                                                                                                                          
                State  of  Legal  Residence                                                            Georgia  (GA)                                     
@@ -945,7 +945,7 @@
                Any Family Member Received Free/Reduced Price  Lunch                                   No                                                
                                                                                                                                                          
                                                                                                                                                          
-               Any Family Member Received Medicaid                                                    No                                                
+               Any Family Member Received Medicaid                                                    Yes
                                                                                                                                                          
                                                                                                                                                          
                Any Family Member Received Refundable Credit  for 36B  Health  Plan (QHP)              No                                                
@@ -967,7 +967,7 @@
                Joint  Tax  Return  for  2022 with  Current Spouse                                                                                       
                                                                                                                                                          
                                                                                                                                                          
-               Family Size                                                                                                                              
+               Family Size                                                                             4
                                                                                                                                                          
                                                                                                                                                          
                Family Members  in  College  2024–25                                                   1                                                 
