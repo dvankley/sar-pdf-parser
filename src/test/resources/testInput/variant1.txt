@@ -157,7 +157,7 @@
                Last  Name                                                                                                                                
                                                                                                                                                          
                                                                                                                                                          
-                 Name                                                                                                                             
+                 Last
                                                                                                                                                          
                                                                                                                                                          
                Su!x                                                                                                                                      
@@ -1296,7 +1296,7 @@
                Current  Marital  Status                                                                                                                  
                                                                                                                                                          
                                                                                                                                                          
-                 Unmarried and  both  legal  parents  living  together                                                                                  
+                 Married  (not separated)
                                                                                                                                                          
                                                                                                                                                          
                State  of Legal  Residence                                                                                                                
@@ -1324,19 +1324,19 @@
                Any Family  Member  Received  Earned  Income Credit  (EIC)                                                                                
                                                                                                                                                          
                                                                                                                                                          
-                 Yes                                                                                                                                     
+                 No
                                                                                                                                                          
                                                                                                                                                          
                Any Family  Member  Received  Federal  Housing Assistance                                                                                 
                                                                                                                                                          
                                                                                                                                                          
-                 Yes                                                                                                                                     
+                 No
                                                                                                                                                          
                                                                                                                                                          
                Any Family  Member  Received  Free/Reduced  Price Lunch                                                                                   
                                                                                                                                                          
                                                                                                                                                          
-                 Yes                                                                                                                                     
+                 No
                                                                                                                                                          
                                                                                                                                                          
                Any Family  Member  Received  Medicaid                                                                                                    
