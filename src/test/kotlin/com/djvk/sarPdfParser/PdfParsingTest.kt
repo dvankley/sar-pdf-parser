@@ -81,9 +81,10 @@ class PdfParsingTest {
             CsvHeaders.Fields.COLLEGE_18 to "",
             CsvHeaders.Fields.COLLEGE_19 to "",
             CsvHeaders.Fields.COLLEGE_20 to "",
-//            CsvHeaders.Fields.FIELDS_TO_REVIEW to "",
-//            CsvHeaders.Fields.ERROR to "",
+            CsvHeaders.Fields.FIELDS_TO_REVIEW to "",
         )
+
+        assertThat(contents.keys).doesNotContain(CsvHeaders.Fields.ERROR)
 
         for ((key, value) in assertions) {
             val actual = contents[key]
