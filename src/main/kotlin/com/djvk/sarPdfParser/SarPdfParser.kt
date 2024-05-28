@@ -204,7 +204,7 @@ class SarPdfParser {
                 lastPosition = match.range.last
             } else {
                 if (section.required) {
-                    throw IllegalArgumentException("Missing expected section ${section.name}")
+                    throw IllegalArgumentException("Missing expected section ${section::class.java.simpleName}.${section.name}")
                 }
             }
         }

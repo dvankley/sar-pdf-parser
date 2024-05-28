@@ -12,16 +12,16 @@ val spaces = spacesWoNl + "\n"
 
 /** There are weird conversion artifacts where "ff" is encoded as some weird single character in
  * the PDF, then gets converted back out into random other characters */
-val doubleEffPattern = "(?:[!\"\u0000]|ff)"
+val doubleEffPattern = "(?:[!\"\u0000 ]|ff)"
 
 /** Same as above, but for fi */
-val fiPattern = "(?:[ﬁ\u0000]|fi)"
+val fiPattern = "(?:[ﬁ\u0000 ]|fi)"
 
 /** Spaces with newlines */
 
 val textDateRegex = """\w{3,7}\.?[${spaces}]+\d{1,2},[${spaces}]+\d{4}""".toRegex()
 
-val tableArrowSeparator = "\uF061"
+val tableArrowSeparator = "[\uF061S]"
 val standardTableValuePattern = """[$spaces]+$tableArrowSeparator[$spacesWoNl]+(.+)\n[$spacesWoNl]+(.+)?$"""
 val interleavedTableValueRegex = """[$spaces]+$tableArrowSeparator[$spacesWoNl]+(.+?)[$spacesWoNl]*$"""
     .toRegex(RegexOption.MULTILINE)
