@@ -295,7 +295,7 @@ class SarPdfParser {
         val workingLabelPatterns = labelPatterns.toMutableList()
 
         while (workingLabelPatterns.isNotEmpty()) {
-            val pattern = (workingLabelPatterns.joinToString("""[$spaces]+""") + interleavedTableValueRegex)
+            val pattern = (workingLabelPatterns.joinToString("""[$spaces]*""") + interleavedTableValueRegex)
                 .toRegex(RegexOption.MULTILINE)
             val matches = pattern.findAll(text).toList()
             if (matches.isEmpty()) {

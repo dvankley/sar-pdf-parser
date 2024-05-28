@@ -353,7 +353,9 @@ object CsvHeaders {
                     "Infants,",
                     "and",
                     "Children",
-                    """\(WIC\)""",
+                    """\(""",
+                    """WIC""",
+                    """\)""",
                 )
             ),
             false,
