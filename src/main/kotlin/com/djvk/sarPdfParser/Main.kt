@@ -3,6 +3,7 @@ package com.djvk.sarPdfParser
 import com.djvk.sarPdfParser.exceptions.dump
 import org.apache.commons.cli.DefaultParser
 import java.io.File
+import java.util.*
 
 object Main {
     @JvmStatic fun main(args : Array<String>) {
@@ -14,7 +15,12 @@ object Main {
             println("Target directory: $directoryPath")
 
             val folder = File(directoryPath)
-            val listOfFiles = folder.listFiles { dir, filename -> filename.toLowerCase().endsWith(".pdf")}
+            val listOfFiles = folder.listFiles { _, filename ->
+                filename
+                    .lowercase(Locale.getDefault())
+                    .endsWith(".pdf")
+            }?.filterNotNull()
+                ?: throw RuntimeException("Target directory $directoryPath contained no files")
 
             val reader = PdfReader(listOfFiles)
             reader.startProcessing()

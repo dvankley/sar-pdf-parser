@@ -1,137 +1,118 @@
 package com.djvk.sarPdfParser
 
+import com.djvk.sarPdfParser.constants.CsvHeaders
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.ComparisonFailure
 import org.junit.Test
 import java.io.File
 
 class PdfParsingTest {
-    val header1 = """
-                                                                                                                                                                                                                          
-      1/1/22,  12:01  AM                                                            2022-2023  Student  Aid Report  Print  | FAFSA  Application | Federal  Student  Aid                                            
-                                                                                                                                                                                                                  
-         2022–23                               Student                       Aid          Report                                                                                                                  
-                                                                                                                                                                                                                  
-         TRANSACTION        05                                                                                                                                                                                    
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                Application  Receipt  Date:                                                   Processed   Date:                                                  Data   Release  Number    (DRN)                  
-                12/31/2021                                                                    01/01/2022                                                         8888                                             
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-         Processing         Results                                                                                                                                                                               
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                Learn    about    federal    tax  benefits    for  education,      including     the   American      Opportunity        tax  credit.                                                              
-                Expected      Family     Contribution:      9999    *                                                                                                                                             
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                This  Student     Aid  Report     (SAR)   reflects   the   parental     data   that  you   have    added     to your    Free   Application      for Federal     Student    Aid                    
-                (FAFSA    ®) form.                                                                                                                                                                                
-                                                                                                                                                                                                                  
-                Based    on  the   information       we   have   on   record    for  you,   your   Expected      Family     Contribution       (EFC)   is 9999.    You   may    be  eligible   to                 
-                receive    a Federal     Pell  Grant    and   other   federal    student     aid.  Your   school    will  use   your    EFC   to determine       your    financial    aid                         
-                eligibility   for  federal    grants,   loans,   and    work-study       funds,   and    possible    funding     from    your   state   and   school.                                             
-                                                                                                                                                                                                                  
-                Your   Free   Application      for  Federal    Student    Aid   (FAFSA    ®)  form    has  been    selected    for  a  review    process     called   verification.     Your                      
-                school   has   the  authority      to request     copies    of certain    financial     documents       from    you   and   your    parent(s).                                                    
-                                                                                                                                                                                                                  
-                There    is a limit   to the   total  amount      of Federal     Pell  Grants    that   a student     may    receive,    which    is the   equivalent      of six  school                         
-                years.   Based    on  information        reported     to the   National     Student    Loan    Data    System    (NSLDS     ®)  database     by  the   schools    you   have                      
-                attended,     you   have   received      Federal    Pell  Grants    for  the   equivalent      of between      one   and    one-half    and    two   school    years.                             
-                                                                                                                                                                                                                  
-                Based    on  your    EFC   of  9999,   you   may    be  eligible   to  receive    a  Federal    Pell  Grant    of  up  to  ${'$'}7,777    for  the  2022–23     school    year                         
-                provided     you   have    not   met   or  exceeded      the  lifetime    limit   established     for   the  Federal    Pell  Grant    program.                                                   
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-         FAFSA       Data                                                                                                                                                                                         
-                                                                                                                                                                                                                  
-         Your    FAFSA     data   reflects   the  answers      you   provided      on  your    FAFSA     form.    Assumed      values    are   marked      with   an  asterisk    (*).                            
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                What    you   must     do  now:                                                                                                                                                                   
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                Use  the   checklist    below    to make    sure   that   all of  your   issues   are  resolved.                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                       If you   need    to make     corrections      to  your   information,       select   "Make     Correction"      on  the  "My    FAFSA"     page   using    your                            
-                       account     username       and   password       (FSA   ID).  If you   need    additional     help   with    your   Student     Aid  Report    (SAR),    contact    your                    
-                       school's    financial    aid   office  or  select   the  "Get   FAFSA     help"   link   from    the  FAFSA     home     page.   If your    mailing    address     or                      
-                       email    address     changes,     you   can   make    the   correction     online.                                                                                                         
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                   Collapse   All                                                                                                
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                Student     Information                                                                                                                                                                          
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                                                                                                                                                                                                                  
-                1. Student's     Last  Name:                                                                   LASTY                                                                                             
-      https://studentaid.gov/fafsa-app/CYCLE2223/ESAR/PRINT                                                                                                                                             1/10      
-    """.trimIndent()
-
     @Test
     fun base() {
-        val file = File("src/test/resources/testInput/sample-2022.pdf")
+        val filesByName = getInputFiles()
         val parser = SarPdfParser()
-        val fileContents = runBlocking {
-            parser.processFile(file)
+
+        // Let's do this processing synchronously for now to make debugging easier
+        val outputs = filesByName.map { (name, content) ->
+            runBlocking {
+                try {
+                    Pair(name, parser.processText(content))
+                } catch (e: Exception) {
+                    throw Exception("Failed processing file $name", e)
+                }
+            }
         }
-        assertThat(fileContents.isNotEmpty())
+
+        for ((name, content) in outputs) {
+            assertThat(content.isNotEmpty())
+            runTestsOnFile(name, content)
+        }
     }
 
-    @Test
-    fun testGetYear1() {
-        val parser = SarPdfParser()
-        val (startYear, endYear) = parser.getReportYears(header1)
+    private fun runTestsOnFile(filename: String, contents: Map<CsvHeaders.Fields, String>) {
+        val assertions = mapOf(
+            CsvHeaders.Fields.YEAR to "2024",
+            CsvHeaders.Fields.RECEIVED_DATE to "Jan. 1, 2024",
+            CsvHeaders.Fields.PROCESSED_DATE to "March 31, 2024",
+            CsvHeaders.Fields.SAI to "-1500",
+            CsvHeaders.Fields.STUDENT_FIRST_NAME to "First",
+            CsvHeaders.Fields.STUDENT_MIDDLE_NAME to "A",
+            CsvHeaders.Fields.STUDENT_LAST_NAME to "Last",
+            CsvHeaders.Fields.STUDENT_DOB to "01/01/2000",
+            CsvHeaders.Fields.STUDENT_SSN_L4 to "•••-••-1234",
+            CsvHeaders.Fields.STUDENT_EMAIL to "firstlast@gmail.com",
+            CsvHeaders.Fields.STUDENT_HAS_DEPENDENTS to "No",
+            CsvHeaders.Fields.ORPHAN_STATE_CUSTODY_OR_EMANCIPATED to "No",
+            CsvHeaders.Fields.LEGAL_GUARDIAN_OTHER_THAN_PARENT to "No",
+            CsvHeaders.Fields.HOMELESS to "No",
+            CsvHeaders.Fields.CANT_PROVIDE_PARENT_INFORMATION to "No",
+            CsvHeaders.Fields.APPLYING_FOR_UNSUBSIDIZED_ONLY to "No",
+            CsvHeaders.Fields.PARENT_ATTENDED_COLLEGE to "One or both parents completed college",
+            CsvHeaders.Fields.PARENT_MARITAL_STATUS to "Married (not separated)",
+            CsvHeaders.Fields.FAMILY_RECEIVED_EIC to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_HOUSING_ASSISTANCE to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_FREE_LUNCH to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_MEDICAID to "Yes",
+            CsvHeaders.Fields.FAMILY_RECEIVED_HEALTH_PLAN_CREDIT to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_SNAP to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_SSI to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_TANF to "No",
+            CsvHeaders.Fields.FAMILY_RECEIVED_WIC to "Yes",
+            CsvHeaders.Fields.FAMILY_SIZE to "4",
+            CsvHeaders.Fields.FAMILY_MEMBERS_IN_COLLEGE to "1",
+            CsvHeaders.Fields.COLLEGE_1 to "GEORGIA STATE UNIVERSITY",
+            CsvHeaders.Fields.COLLEGE_2 to "KENNESAW STATE UNIVERSITY",
+            CsvHeaders.Fields.COLLEGE_3 to "GEORGIA INSTITUTE OF TECHNOLOGY",
+            CsvHeaders.Fields.COLLEGE_4 to "UNIVERSITY OF GEORGIA",
+            CsvHeaders.Fields.COLLEGE_5 to "",
+            CsvHeaders.Fields.COLLEGE_6 to "",
+            CsvHeaders.Fields.COLLEGE_7 to "",
+            CsvHeaders.Fields.COLLEGE_8 to "",
+            CsvHeaders.Fields.COLLEGE_9 to "",
+            CsvHeaders.Fields.COLLEGE_10 to "",
+            CsvHeaders.Fields.COLLEGE_11 to "",
+            CsvHeaders.Fields.COLLEGE_12 to "",
+            CsvHeaders.Fields.COLLEGE_13 to "",
+            CsvHeaders.Fields.COLLEGE_14 to "",
+            CsvHeaders.Fields.COLLEGE_15 to "",
+            CsvHeaders.Fields.COLLEGE_16 to "",
+            CsvHeaders.Fields.COLLEGE_17 to "",
+            CsvHeaders.Fields.COLLEGE_18 to "",
+            CsvHeaders.Fields.COLLEGE_19 to "",
+            CsvHeaders.Fields.COLLEGE_20 to "",
+            CsvHeaders.Fields.FIELDS_TO_REVIEW to "",
+        )
 
-        assertThat(startYear).isEqualTo(2022)
-        assertThat(endYear).isEqualTo(2023)
+        assertThat(contents.keys).doesNotContain(CsvHeaders.Fields.ERROR)
+
+        for ((key, value) in assertions) {
+            val actual = contents[key]
+                ?: throw AssertionError("Missing expected field $key in file $filename")
+            try {
+                assertThat(actual).isEqualTo(value)
+            } catch (e: ComparisonFailure) {
+                throw AssertionError("Got unexpected value for $key in file $filename", e)
+            }
+        }
     }
 
-    @Test
-    fun testGetEfc1() {
-        val parser = SarPdfParser()
-        val result = parser.getEFCNumber(header1)
+    private fun getInputFiles(): List<Pair<String, String>> {
+        val directory = File("src/test/resources/testInput/")
 
-        assertThat(result.number).isEqualTo("9999")
-        assertThat(result.isStarred).isEqualTo(true)
-        assertThat(result.hasCSuffix).isEqualTo(false)
-        assertThat(result.hasHSuffix).isEqualTo(false)
-    }
+        if (!directory.exists() || !directory.isDirectory) {
+            throw RuntimeException("Could not find input file directory")
+        }
 
-    @Test
-    fun testGetHeaderData() {
-        val parser = SarPdfParser()
-        val actual = parser.getHeaderTableDataAfter2022(header1)
+        val files = directory.listFiles()
+            ?: throw RuntimeException("Unable to find test input files")
 
-        assertThat(actual.receivedDate).isEqualTo("12/31/2021")
-        assertThat(actual.processedDate).isEqualTo("01/01/2022")
-        assertThat(actual.DRN).isEqualTo(8888)
+        if (files.size != 3) {
+            throw RuntimeException("Unexpected count of test input files")
+        }
+
+        return files
+//            .filter { it.name == "variant2.txt" }
+            .map { Pair(it.name, it.readText()) }
     }
 }

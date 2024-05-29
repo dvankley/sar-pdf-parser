@@ -127,6 +127,6 @@ object PdfNormalizer {
 
     private val asciiToUnicodeAlternatives = unicodePunctuation.entries.groupBy { it.value }
     fun groupByAsciiForRegex(ascii: Char): String {
-        return PdfNormalizer.asciiToUnicodeAlternatives[ascii]!!.map { it.key.toChar() }.joinToString("") + ascii
+        return asciiToUnicodeAlternatives[ascii]!!.map { it.key.toChar() }.joinToString("") + ascii
     }
 }
