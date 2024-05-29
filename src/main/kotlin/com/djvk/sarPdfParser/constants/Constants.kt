@@ -21,7 +21,7 @@ val fiPattern = "(?:[ﬁ\u0000 ]|fi)"
 
 val textDateRegex = """\w{3,7}\.?[${spaces}]+\d{1,2},[${spaces}]+\d{4}""".toRegex()
 
-val tableArrowSeparator = "[\uF061S]"
+val tableArrowSeparator = "[\uF061S\\!]"
 val standardTableValuePattern = """[$spaces]+$tableArrowSeparator[$spacesWoNl]+(.+)\n[$spacesWoNl]+(.+)?$"""
 val interleavedTableValueRegex = """[$spaces]*$tableArrowSeparator[$spacesWoNl]+(.+?)[$spacesWoNl]*$"""
     .toRegex(RegexOption.MULTILINE)

@@ -9,7 +9,7 @@ enum class FileSection(
     override val children: List<Section>? = null,
     override val required: Boolean = true,
 ) : Section {
-    HEADER("""FAFSA[$spaces]+Submission[$spaces]+Summary""".toRegex()),
+    HEADER("""F[$spaces]*AFSA[$spaces]+Submission[$spaces]+Summary""".toRegex()),
     ESTIMATED_AID("""Estimated[$spaces]+Federal[$spaces]+Student[$spaces]+Aid""".toRegex()),
     FORM_ANSWERS(
         """Y[$spaces]*our[$spaces]+FAFSA[$spaces]*®?[$spaces]+Form[$spaces]+Answers""".toRegex(),
@@ -42,6 +42,7 @@ enum class FormSection(
             ParentSubsection.FINANCIALS,
             ParentSubsection.SIGNATURE,
         ),
+        false,
     ),
 
     PARENT_SPOUSE_OR_PARTNER(
