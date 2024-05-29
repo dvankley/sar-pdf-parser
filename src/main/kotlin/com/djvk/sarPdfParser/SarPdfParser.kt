@@ -18,11 +18,12 @@ class SarPdfParser {
     /**
      * Top level entry point to process an entire PDF file
      */
-    suspend fun processFile(file: File): Map<String, String> {
+    fun processFile(file: File): Map<String, String> {
         println("Processing file ${file.name}")
         PDDocument.load(file).use { document ->
             val text = getLayoutText(document)
             if (text.isEmpty() || text.isBlank()) {
+                // This will typically happen with image files
                 throw FileProcessingException(file.name, RuntimeException("No content parsed from file"))
             }
             try {
@@ -36,13 +37,14 @@ class SarPdfParser {
     /**
      * Parses relevant fields out of the text version of a PDF file
      */
-    suspend fun processText(text: String): Map<CsvHeaders.Fields, CsvOutputValue> {
+    fun processText(text: String): Map<CsvHeaders.Fields, CsvOutputValue> {
         val sanitizedText = sanitizeText(text)
 
         val fileSections = identifyFileSections(sanitizedText, FileSection.values().toList())
 
         val output = HashMap<CsvHeaders.Fields, CsvOutputValue>()
         for (fileSection in fileSections) {
+            // Aggregate output from each section
             output += processSection(fileSection)
         }
 
@@ -65,6 +67,8 @@ class SarPdfParser {
 
     /**
      * Cleans up known artifacts in the text to improve reliability of the parsing code.
+     *
+     * Currently this is page break/footer garbage
      */
     fun sanitizeText(input: String): String {
         val footerRegex1 = """https://studentaid\.gov/fafsa-apply.*$\n.*\n.*""".toRegex(RegexOption.MULTILINE)
@@ -73,6 +77,13 @@ class SarPdfParser {
         return out
     }
 
+    /**
+     * The function that does most of the work.
+     * Recurses through content in a given [sectionMatch] and attempts to parse out table values
+     *  through the power of a whole buttload of regexes.
+     *
+     * @param sectionMatch A section identified by [identifyFileSections] to parse data from.
+     */
     fun processSection(sectionMatch: SectionMatch): Map<CsvHeaders.Fields, CsvOutputValue> {
         val fields = CsvHeaders.fieldsBySection[sectionMatch.section]
             ?: listOf()
@@ -80,8 +91,13 @@ class SarPdfParser {
         // Iterate over all field definitions that should be in this section
         fieldIteration@ for (field in fields) {
             if (field.tableMatchPatterns?.isNotEmpty() == true) {
+                /**
+                 * If a field definition has tableMatchPatterns, it's a table field that should follow
+                 *  the basic format we expect of table fields.
+                 */
+
+                /** Used to support [CsvHeaders.Fields.matchAnyYes] */
                 var haveAnyMatched = false
-                // Table field
                 // Iterate over all possible patterns for this field
                 for (tablePattern in field.tableMatchPatterns) {
                     val matchValue = if (field.handleInterleaved) {
@@ -167,6 +183,9 @@ class SarPdfParser {
         return output
     }
 
+    /**
+     * Clean up raw table values before output
+     */
     private fun postProcessValue(value: String): String {
         return value
             .trim()
@@ -174,6 +193,9 @@ class SarPdfParser {
             .replace("""[${spaces}]{2,}""".toRegex(), " ")
     }
 
+    /**
+     * Represents the definition of a section as identified by [identifyFileSections]
+     */
     data class SectionMatch(
         val section: Section,
         val headerMatch: MatchResult,
@@ -188,6 +210,10 @@ class SarPdfParser {
         val children: List<SectionMatch>,
     )
 
+    /**
+     * Recurses over file content, using headers to identify different sections.
+     * See [Section] and its implementations for the section structure we expect in the file.
+     */
     fun identifyFileSections(
         containingText: String,
         sections: List<Section>,
@@ -206,6 +232,7 @@ class SarPdfParser {
                 if (section.required) {
                     throw IllegalArgumentException("Missing expected section ${section::class.java.simpleName}.${section.name}")
                 }
+                // Not required sections are ignored here and will simply be omitted from output.
             }
         }
 
@@ -228,16 +255,17 @@ class SarPdfParser {
             val children = section.children ?: listOf()
 
             val childMatches = if (children.isNotEmpty()) {
-                // If the section has children
+                // If the section has children, recurse through them
                 identifyFileSections(
                     containingText.substring(start, end),
                     children,
                 )
             } else {
-                // If the section's children are null or empty
+                // If the section's children are null or empty, then end recursion here
                 listOf()
             }
 
+            // Add any child matches to the running output list
             fileSections.add(
                 SectionMatch(
                     section,
@@ -252,35 +280,9 @@ class SarPdfParser {
         return fileSections
     }
 
-    fun getReportYears(text: String): Pair<Int, Int> {
-        val reportYearRegex1 =
-            """(\d{4})[$spaces\n]*[$dashes][$spaces\n]*(\d{2})[$spaces\n]*(?:Electronic)?[$spaces\n]*Student[$spaces\n]*Aid[$spaces\n]*Report"""
-                .toRegex(RegexOption.IGNORE_CASE)
-        var reportYearMatch = reportYearRegex1.find(text, 0)
-
-        // If the first regex didn't work, try again with an older format
-        if (reportYearMatch == null) {
-            val reportYearRegex2 =
-                """(\d{4})[$spaces]*[$dashes][$spaces]*(\d{4})[$spaces]*Free[$spaces]*Application[$spaces]*for[$spaces]*Federal[$spaces]*Student[$spaces]*Aid"""
-                    .toRegex(RegexOption.IGNORE_CASE)
-            reportYearMatch = reportYearRegex2.find(text, 0)
-        }
-
-        return Pair(
-            reportYearMatch?.groupValues?.get(1)?.toInt()
-                ?: throw RuntimeException("Failed to find SAR start year in PDF"),
-            // This'll be a problem in 70 years!
-            reportYearMatch.groupValues[2].toInt() + 2000,
-        )
-    }
-
-    private fun validateReportYear(text: String) {
-        val (startYear, _) = getReportYears(text)
-        if (startYear < 2024) {
-            throw IllegalArgumentException("This version of the software only operates on 2024 and later FSS files. Found start year of $startYear")
-        }
-    }
-
+    /**
+     * Function to extract values from standard table entries.
+     */
     fun extractStandardTableValues(text: String, labelPatterns: List<RegexPattern>): String? {
         val labelPattern = labelPatterns.joinToString("[$spaces]+")
         val regex = (labelPattern + standardTableValuePattern)
@@ -290,7 +292,13 @@ class SarPdfParser {
         return (matchGroupValues[1].trim() + " " + matchGroupValues[2].trim()).trim()
     }
 
-
+    /**
+     * Special handling triggered by [CsvHeaders.Fields.handleInterleaved].
+     *
+     * In some cases, the actual value of a table field will be interleaved with the field's label.
+     * This function attempts to handle that by iteratively removing terms from the field label and checking
+     *  for a match.
+     */
     fun extractInterleavedValues(text: String, labelPatterns: List<RegexPattern>): String {
         val workingLabelPatterns = labelPatterns.toMutableList()
 
@@ -299,7 +307,7 @@ class SarPdfParser {
                 .toRegex(RegexOption.MULTILINE)
             val matches = pattern.findAll(text).toList()
             if (matches.isEmpty()) {
-                // No match for this set of label terms, keep trying
+                // No match for this set of label terms, knock off the last label term and keep trying
                 workingLabelPatterns.removeLast()
                 continue
             } else if (matches.size > 1) {
