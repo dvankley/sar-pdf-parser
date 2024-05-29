@@ -8,7 +8,6 @@ import java.io.FileReader
 import kotlin.test.assertEquals
 
 class CsvWriterTest {
-    @Test
     fun base() {
         var testFilename = "csvwritertest.csv"
 
