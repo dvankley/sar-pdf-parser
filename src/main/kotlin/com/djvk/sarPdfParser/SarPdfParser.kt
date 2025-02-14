@@ -160,14 +160,17 @@ class SarPdfParser {
                     }
 
                     CsvHeaders.Fields.SAI -> {
-                        val variants1And2Regex =
-                            """correct[${spaces}]+your[${spaces}]+FAFSA[${spaces}]+information\.[${spaces}]+(-?\d{1,4})""".toRegex()
-                        val variant3Regex =
-                            """by[${spaces}]+your[${spaces}]+school[${spaces}]+to[${spaces}]+determine[${spaces}]+(-?\d{1,4})""".toRegex()
-                        val match = variants1And2Regex.find(sectionMatch.text)
-                            ?: variant3Regex.find(sectionMatch.text)
-                            ?: throw RuntimeException("Unable to parse SAI")
-                        output[field] = postProcessValue(match.groupValues[1])
+                        val startRegex = """Your[${spaces}]+Student[${spaces}]+Aid[${spaces}]+Index[${spaces}]+\([${spaces}]*SAI[${spaces}]*\)""".toRegex(RegexOption.MULTILINE)
+                        val endRegex = """What[${spaces}]+does[${spaces}]+this[${spaces}]+mean\?""".toRegex(RegexOption.MULTILINE)
+                        val startMatch = startRegex.find(sectionMatch.text)
+                            ?: throw RuntimeException("Unable to find start of SAI block")
+                        val endMatch = endRegex.find(sectionMatch.text)
+                            ?: throw RuntimeException("Unable to find end of SAI block")
+                        val subsectionText = sectionMatch.text.substring(startMatch.range.last, endMatch.range.first)
+                        val valueRegex = """-?\d+""".toRegex()
+                        val valueMatch = valueRegex.find(subsectionText)
+                            ?: throw RuntimeException("Unable to find SAI value")
+                        output[field] = postProcessValue(valueMatch.groupValues[0])
                     }
 
                     else -> throw IllegalArgumentException("Unexpected non-table field $field")
